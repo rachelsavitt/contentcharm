@@ -1,0 +1,80 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root,
+  html,
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  body {
+    @apply bg-[#FAF8F4] text-[#1A1612];
+  }
+
+}
+
+@layer components {
+  .card {
+    @apply bg-white border border-[#E8E3DC] rounded-[14px] transition-shadow duration-300;
+  }
+
+  .card:hover {
+    box-shadow: 0 6px 24px rgba(26, 22, 18, 0.07);
+  }
+
+  .btn-primary {
+    @apply bg-[#1A1612] text-white rounded-[10px] px-6 py-3 font-medium transition-all duration-200;
+  }
+
+  .btn-primary:hover {
+    @apply brightness-110;
+  }
+
+  .btn-secondary {
+    @apply bg-white border border-[#E8E3DC] text-[#1A1612] rounded-[10px] px-6 py-3 font-medium transition-all duration-200;
+  }
+
+  .btn-secondary:hover {
+    box-shadow: 0 6px 24px rgba(26, 22, 18, 0.07);
+  }
+
+  .status-badge-approved {
+    @apply bg-[#EEF4F0] text-[#2E6B45] px-3 py-1.5 rounded-full text-xs font-semibold;
+  }
+
+  .status-badge-edits {
+    @apply bg-[#FBF2E0] text-[#C9973A] px-3 py-1.5 rounded-full text-xs font-semibold;
+  }
+
+  .status-badge-pending {
+    @apply bg-[#FAF8F4] text-[#1A1612] border border-[#E8E3DC] px-3 py-1.5 rounded-full text-xs font-semibold;
+  }
+
+  .stat-card {
+    @apply card p-6;
+  }
+
+  .stat-card-approved {
+    @apply stat-card border-t-[3px] border-t-[#7C9E8A];
+  }
+
+  .stat-card-edits {
+    @apply stat-card border-t-[3px] border-t-[#C9973A];
+  }
+
+  .stat-card-pending {
+    @apply stat-card border-t-[3px] border-t-[#8C8479];
+  }
+
+  .label-uppercase {
+    @apply text-[11px] uppercase tracking-[0.8px] text-[#8C8479] font-semibold;
+  }
+
+  .platform-badge {
+    @apply bg-[#F0EEF9] text-[#7C6FAF] px-3 py-1 rounded-full text-xs font-medium;
+  }
+}
