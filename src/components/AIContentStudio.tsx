@@ -296,14 +296,37 @@ Make captions engaging, authentic, and optimized for each platform. Include rele
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-[#1A1612] mb-2">Visual Style</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {VISUAL_STYLES.map((style) => (
+                    <button
+                      key={style.id}
+                      onClick={() => setSelectedStyle(style)}
+                      className="text-left px-3 py-2 rounded-lg text-sm border transition"
+                      style={{
+                        borderColor: selectedStyle.id === style.id ? primaryColor : '#E8E3DC',
+                        backgroundColor: selectedStyle.id === style.id ? primaryColor + '10' : 'white',
+                        color: selectedStyle.id === style.id ? primaryColor : '#1A1612',
+                        fontWeight: selectedStyle.id === style.id ? 600 : 400,
+                      }}
+                    >
+                      <span className="mr-1">{style.emoji}</span>{style.name}
+                      <p className="text-xs mt-0.5 font-normal" style={{ color: selectedStyle.id === style.id ? primaryColor : '#8C8479' }}>{style.description}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-[#1A1612] mb-2">Select posting dates</label>
-                <CalendarDatePicker
-                  selectedDates={selectedDates}
-                  onDatesChange={setSelectedDates}
-                  primaryColor={primaryColor}
-                />
+                <div className="flex justify-center">
+                  <CalendarDatePicker
+                    selectedDates={selectedDates}
+                    onDatesChange={setSelectedDates}
+                    primaryColor={primaryColor}
+                  />
+                </div>
               </div>
 
               <div>

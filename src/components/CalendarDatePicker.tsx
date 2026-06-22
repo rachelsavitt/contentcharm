@@ -34,7 +34,7 @@ export function CalendarDatePicker({ selectedDates, onDatesChange, primaryColor 
   const today = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="border border-[#E8E3DC] rounded-xl p-4">
+    <div className="border border-[#E8E3DC] rounded-xl p-4 w-full max-w-[420px]">
       <div className="flex items-center justify-between mb-4">
         <button onClick={prevMonth} className="p-1 hover:bg-[#FAF8F4] rounded-lg transition">
           <ChevronLeft className="w-4 h-4 text-[#8C8479]" />
@@ -65,7 +65,7 @@ export function CalendarDatePicker({ selectedDates, onDatesChange, primaryColor 
             <button
               key={day}
               onClick={() => toggleDate(dateStr)}
-              className="aspect-square flex items-center justify-center rounded-lg text-xs transition"
+              className="h-10 flex items-center justify-center rounded-lg text-sm transition"
               style={{
                 backgroundColor: isSelected ? primaryColor : isToday ? primaryColor + '15' : 'transparent',
                 color: isSelected ? 'white' : isToday ? primaryColor : '#1A1612',
