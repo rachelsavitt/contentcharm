@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Plus, CreditCard as Edit2, Trash2, Users } from 'lucide-react';
+import { Plus, CreditCard as Edit2, Trash2, Users, Sparkles, Loader2, Link as LinkIcon } from 'lucide-react';
 import { ImageUpload } from './ImageUpload';
 import { useNavigate } from 'react-router-dom';
 
@@ -21,6 +21,7 @@ interface Client {
     body: string;
   };
   notes?: string;
+  brand_dna?: any;
   created_at: string;
 }
 
@@ -34,6 +35,10 @@ export function ClientManagement() {
   const [subscriptionPlan, setSubscriptionPlan] = useState<string>('starter');
   const [clientLimit, setClientLimit] = useState<number>(3);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [scrapeUrl, setScrapeUrl] = useState('');
+  const [scraping, setScraping] = useState(false);
+  const [scrapeError, setScrapeError] = useState('');
+  const [scrapedDNA, setScrapedDNA] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -96,6 +101,38 @@ export function ClientManagement() {
     setLoading(false);
   };
 
+  const handleScrapeForClient = async () => {
+    if (!scrapeUrl.trim()) { setScrapeError('Paste a website URL first'); return; }
+    setScraping(true);
+    setScrapeError('');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const resp = await fetch('https://bvgkrotyvoungxmfvdnj.supabase.co/functions/v1/scrape-website', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ url: scrapeUrl }),
+      });
+      const data = await resp.json();
+      if (data.error) throw new Error(data.error);
+      setScrapedDNA(data);
+      setFormData((prev) => ({
+        ...prev,
+        name: prev.name || data.businessName || '',
+        brand_logo_url: prev.brand_logo_url || data.logo || '',
+        notes: data.brandSummary || prev.notes,
+        brand_colors: {
+          primary: data.colors?.[0] || prev.brand_colors.primary,
+          secondary: data.colors?.[1] || prev.brand_colors.secondary,
+          accent: data.colors?.[2] || prev.brand_colors.accent,
+        },
+      }));
+    } catch (err: any) {
+      setScrapeError('Could not read that site. Fill in the details manually below.');
+    } finally {
+      setScraping(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -108,6 +145,7 @@ export function ClientManagement() {
           brand_logo_url: formData.brand_logo_url,
           mockup_logo_url: formData.mockup_logo_url,
           brand_colors: formData.brand_colors,
+          brand_dna: scrapedDNA || editingClient?.brand_dna || null,
           brand_fonts: formData.brand_fonts,
           notes: formData.notes,
           updated_at: new Date().toISOString()
@@ -128,6 +166,7 @@ export function ClientManagement() {
           brand_logo_url: formData.brand_logo_url,
           mockup_logo_url: formData.mockup_logo_url,
           brand_colors: formData.brand_colors,
+          brand_dna: scrapedDNA || editingClient?.brand_dna || null,
           brand_fonts: formData.brand_fonts,
           notes: formData.notes
         });
@@ -342,6 +381,48 @@ export function ClientManagement() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              {!editingClient && (
+                <div className="rounded-[12px] p-4 border" style={{ borderColor: '#C9A96E55', backgroundColor: '#C9A96E0D' }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles className="w-4 h-4 text-[#C9A96E]" fill="#C9A96E" />
+                    <span className="text-sm font-semibold text-[#1A1612]">Start with their website</span>
+                  </div>
+                  <p className="text-xs text-[#8C8479] mb-3">Paste your client's URL and we'll auto-fill their brand profile.</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={scrapeUrl}
+                      onChange={(e) => setScrapeUrl(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleScrapeForClient(); } }}
+                      placeholder="glowandgrace.com"
+                      className="flex-1 px-3 py-2 border border-[#E8E3DC] rounded-[10px] text-sm focus:ring-2 focus:ring-[#C9A96E] focus:border-transparent text-[#1A1612]"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleScrapeForClient}
+                      disabled={scraping}
+                      className="px-4 py-2 rounded-[10px] text-white text-sm font-medium flex items-center gap-2 disabled:opacity-60"
+                      style={{ backgroundColor: '#C9A96E' }}
+                    >
+                      {scraping ? <><Loader2 className="w-4 h-4 animate-spin" /> Reading...</> : <>Auto-fill</>}
+                    </button>
+                  </div>
+                  {scrapeError && <p className="text-xs text-[#D4614A] mt-2">{scrapeError}</p>}
+                  {scrapedDNA && !scrapeError && (
+                    <div className="mt-3 text-xs text-[#5C564E]">
+                      <span className="font-semibold text-[#1A1612]">Got it.</span> {scrapedDNA.brandSummary}
+                      {scrapedDNA.messagingThemes?.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {scrapedDNA.messagingThemes.map((t, i) => (
+                            <span key={i} className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: '#C9A96E1A', color: '#C9A96E' }}>{t}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div>
                 <label className="label-uppercase block mb-2">
                   Client Name *
