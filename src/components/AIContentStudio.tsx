@@ -35,11 +35,15 @@ export function AIContentStudio({
   onClose,
   onPostsAdded,
 }: AIContentStudioProps) {
-  const [step, setStep] = useState<'setup' | 'generating' | 'review'>('setup');
+  const [step, setStep] = useState<'url' | 'setup' | 'generating' | 'review'>('url');
   const [industry, setIndustry] = useState('');
   const [tone, setTone] = useState('professional yet approachable');
   const [postCount, setPostCount] = useState('12');
   const [additionalContext, setAdditionalContext] = useState('');
+  const [clientUrl, setClientUrl] = useState('');
+  const [scraping, setScraping] = useState(false);
+  const [brandDNA, setBrandDNA] = useState<any>(null);
+  const [scrapeError, setScrapeError] = useState('');
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [selectedStyle, setSelectedStyle] = useState<VisualStyle>(VISUAL_STYLES[0]);
@@ -105,7 +109,7 @@ export function AIContentStudio({
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
         body: JSON.stringify({
-          prompt: `Professional social media image for ${clientName}. Visual aesthetic: ${selectedStyle.prompt}. Brand tone: ${tone}. Image concept: ${post.imageConcept}. Platform: ${post.platform}. Make it scroll-stopping and on-trend.`,
+          prompt: `Professional social media image for ${clientName}. Visual aesthetic: ${selectedStyle.prompt}. Brand tone: ${tone}. Image concept: ${post.imageConcept}. Platform: ${post.platform}. Make it scroll-stopping and on-trend. ${brandDNA ? `Brand context: ${brandDNA.brandSummary || ''}. Themes: ${(brandDNA.messagingThemes || []).join(', ')}.` : ''}`,
         }),
       });
       const data = await response.json();
@@ -128,7 +132,7 @@ export function AIContentStudio({
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
         body: JSON.stringify({
-          prompt: `Professional social media image for ${clientName}, a ${industry} brand. Visual aesthetic: ${selectedStyle.prompt}. Brand tone: ${tone}. Image concept: ${post.imageConcept}. Platform: ${post.platform}. Make it scroll-stopping and on-trend.`,
+          prompt: `Professional social media image for ${clientName}, a ${industry} brand. Visual aesthetic: ${selectedStyle.prompt}. Brand tone: ${tone}. Image concept: ${post.imageConcept}. Platform: ${post.platform}. Make it scroll-stopping and on-trend. ${brandDNA ? `Brand context: ${brandDNA.brandSummary || ''}. Themes: ${(brandDNA.messagingThemes || []).join(', ')}.` : ''}`,
           referenceImages,
         }),
       });
@@ -141,6 +145,38 @@ export function AIContentStudio({
     } catch (err) {
       console.error('Image generation error:', err);
       setGeneratedPosts(prev => prev.map((p, i) => i === index ? { ...p, generatingImage: false } : p));
+    }
+  };
+
+  const handleScrapeURL = async () => {
+    if (!clientUrl.trim()) { setScrapeError('Please paste a website URL'); return; }
+    setScraping(true);
+    setScrapeError('');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const resp = await fetch('https://bvgkrotyvoungxmfvdnj.supabase.co/functions/v1/scrape-website', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ url: clientUrl }),
+      });
+      const data = await resp.json();
+      if (data.error) throw new Error(data.error);
+      setBrandDNA(data);
+      if (data.industry) setIndustry(data.industry);
+      if (data.toneOfVoice) setTone(data.toneOfVoice);
+      const ctxBits = [];
+      if (data.brandSummary) ctxBits.push(data.brandSummary);
+      if (data.targetAudience) ctxBits.push('Target audience: ' + data.targetAudience);
+      if (data.messagingThemes?.length) ctxBits.push('Themes: ' + data.messagingThemes.join(', '));
+      if (data.keyServices?.length) ctxBits.push('Services: ' + data.keyServices.join(', '));
+      if (data.vocabularyToUse?.length) ctxBits.push('Use words like: ' + data.vocabularyToUse.join(', '));
+      if (data.vocabularyToAvoid?.length) ctxBits.push('Avoid words like: ' + data.vocabularyToAvoid.join(', '));
+      setAdditionalContext(ctxBits.join('. '));
+      setStep('setup');
+    } catch (err: any) {
+      setScrapeError('Could not read that site. Try another URL or set up manually.');
+    } finally {
+      setScraping(false);
     }
   };
 
@@ -164,6 +200,16 @@ Calendar: ${calendarTitle}
 Brand Voice/Tone: ${tone}
 ${clientNotes ? `Additional Brand Notes: ${clientNotes}` : ''}
 ${additionalContext ? `Additional Context: ${additionalContext}` : ''}
+${brandDNA ? `
+
+BRAND DNA (follow this closely so every post sounds like this brand):
+- Industry: ${brandDNA.industry || ''}
+- Target audience: ${brandDNA.targetAudience || ''}
+- Tone of voice: ${brandDNA.toneOfVoice || ''}
+- Key services: ${(brandDNA.keyServices || []).join(', ')}
+- Messaging themes: ${(brandDNA.messagingThemes || []).join(', ')}
+- Vocabulary to USE: ${(brandDNA.vocabularyToUse || []).join(', ')}
+- Vocabulary to AVOID: ${(brandDNA.vocabularyToAvoid || []).join(', ')}` : ''}
 
 You MUST return EXACTLY ${postCount} post objects, no more, no less. Return a JSON array of ${postCount} post objects. Each object must have exactly these fields:
 - title: short post title (5 words max)
@@ -273,8 +319,63 @@ Make captions engaging, authentic, and optimized for each platform. Include rele
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
 
+          {step === 'url' && (
+            <div className="space-y-5">
+              <div className="text-center py-2">
+                <h3 className="text-lg font-semibold text-[#1A1612] mb-1" style={{ fontFamily: 'DM Serif Display, serif' }}>
+                  Paste your client's website
+                </h3>
+                <p className="text-sm text-[#8C8479]">We'll study their brand and pre-fill everything for you.</p>
+              </div>
+
+              <div>
+                <input
+                  type="text"
+                  value={clientUrl}
+                  onChange={(e) => setClientUrl(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleScrapeURL(); }}
+                  placeholder="glowandgrace.com"
+                  className="w-full px-4 py-3 border border-[#E8E3DC] rounded-lg text-sm focus:outline-none focus:border-[#C9A96E]"
+                />
+                {scrapeError && <p className="text-red-500 text-xs mt-2">{scrapeError}</p>}
+              </div>
+
+              <button
+                onClick={handleScrapeURL}
+                disabled={scraping}
+                className="w-full px-4 py-3 text-white rounded-lg transition text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-60"
+                style={{ backgroundColor: primaryColor }}
+              >
+                {scraping ? <><Loader2 className="w-4 h-4 animate-spin" /> Studying the brand...</> : <><Sparkles className="w-4 h-4" fill="white" /> Generate Brand Profile</>}
+              </button>
+
+              <div className="text-center">
+                <button onClick={() => setStep('setup')} className="text-xs text-[#8C8479] hover:text-[#1A1612] underline">
+                  or set up manually
+                </button>
+              </div>
+            </div>
+          )}
+
           {step === 'setup' && (
             <div className="space-y-5">
+              {brandDNA && (
+                <div className="rounded-xl p-4" style={{ backgroundColor: primaryColor + '0D', border: `1px solid ${primaryColor}33` }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles className="w-4 h-4" style={{ color: primaryColor }} fill={primaryColor} />
+                    <span className="text-sm font-semibold text-[#1A1612]">We studied {brandDNA.businessName || clientName}</span>
+                  </div>
+                  {brandDNA.brandSummary && <p className="text-xs text-[#5C564E] mb-2">{brandDNA.brandSummary}</p>}
+                  {brandDNA.messagingThemes?.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {brandDNA.messagingThemes.map((t: string, i: number) => (
+                        <span key={i} className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: primaryColor + '1A', color: primaryColor }}>{t}</span>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-[10px] text-[#8C8479] mt-2">Everything below is pre-filled — tweak anything, then generate.</p>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-[#1A1612] mb-2">Industry *</label>
                 <div className="grid grid-cols-2 gap-2">
