@@ -489,7 +489,7 @@ export function MarketingHomePage() {
               {
                 title: 'White-label client pages',
                 description:
-                  "Your logo, your colors, your domain. Clients never see Content Charm branding unless you want them to.",
+                  "Your logo, your colors, your branding. The approval page looks like it was built just for your client.",
                 icon: Paintbrush,
               },
               {

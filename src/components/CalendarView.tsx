@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Calendar, CalendarPost, supabase } from '../lib/supabase';
-import { Share2, ArrowLeft, Plus, Copy, Check, Video, Mail, Eye, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Share2, ArrowLeft, Plus, Copy, Check, Video, Mail, Eye, ChevronLeft, ChevronRight, X, Bell, Loader2, Sparkles } from 'lucide-react';
 import { PostDetailModal } from './PostDetailModal';
 import { PostCreator } from './PostCreator';
 import { ExportCalendar } from './ExportCalendar';
@@ -9,6 +9,7 @@ import { MediaPreview } from './MediaPreview';
 import { MediaUpload } from './MediaUpload';
 import { MediaLinkInput } from './MediaLinkInput';
 import { SocialMediaMockup } from './SocialMediaMockup';
+import { AIContentStudio } from './AIContentStudio';
 
 interface CalendarViewProps {
   calendar: Calendar;
@@ -48,6 +49,54 @@ export function CalendarView({ calendar: initialCalendar, onBack, onUpdate }: Ca
   const [showPostCreator, setShowPostCreator] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [showCopyChecklist, setShowCopyChecklist] = useState(false);
+  const [sendingReminder, setSendingReminder] = useState(false);
+  const [reminderSent, setReminderSent] = useState(false);
+  const [reminderFrequency, setReminderFrequency] = useState('off');
+  const [showReminderDropdown, setShowReminderDropdown] = useState(false);
+  const [showGenerateCaptions, setShowGenerateCaptions] = useState(false);
+
+  const handleSendReminder = async () => {
+    const pendingPosts = posts.filter(p => p.approval_status === 'pending' || p.approval_status === 'revision_requested');
+    if (pendingPosts.length === 0) {
+      alert('All posts are already approved!');
+      return;
+    }
+
+    const clientEmail = prompt('Enter client email address to send reminder:');
+    if (!clientEmail || !clientEmail.includes('@')) return;
+
+    setSendingReminder(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: profile } = await supabase.from('profiles').select('business_name, full_name').eq('id', user?.id).single();
+      const freelancerName = profile?.business_name || profile?.full_name || 'Your social media manager';
+      const shareUrl = `${window.location.origin}/share/${calendar.share_token}`;
+      const primaryColor = client?.brand_colors?.primary || client?.primary_color || '#C9A96E';
+
+      const { data, error } = await supabase.functions.invoke('send-reminder-email', {
+        body: {
+          clientEmail,
+          clientName: client?.name || calendar.title,
+          freelancerName,
+          calendarTitle: calendar.title,
+          shareUrl,
+          pendingPosts: pendingPosts.map(p => ({ title: p.title, scheduled_date: p.scheduled_date, platform: p.platform })),
+          primaryColor,
+          logoUrl: client?.brand_logo_url,
+          calendarId: calendar.id,
+        },
+      });
+
+      if (error) throw error;
+      setReminderSent(true);
+      setTimeout(() => setReminderSent(false), 3000);
+    } catch (err) {
+      console.error('Error sending reminder:', err);
+      alert('Failed to send reminder. Please try again.');
+    } finally {
+      setSendingReminder(false);
+    }
+  };
   const [showSendModal, setShowSendModal] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(calendar.title);
@@ -493,12 +542,23 @@ export function CalendarView({ calendar: initialCalendar, onBack, onUpdate }: Ca
             <ExportCalendar posts={posts} calendarTitle={calendar.title} />
 
             <button
+              onClick={() => setShowGenerateCaptions(true)}
+              className="btn-secondary flex items-center gap-2 text-xs px-3 py-2"
+              style={{ color: '#C9A96E' }}
+            >
+              <Sparkles className="w-4 h-4" fill="#C9A96E" />
+              AI Content Studio
+            </button>
+
+            <button
               onClick={() => setShowSendModal(true)}
               className="btn-secondary flex items-center gap-2 text-xs px-3 py-2"
             >
               <Mail className="w-4 h-4" />
               Send to Client
             </button>
+
+
 
             <button
               onClick={handleCopyShareLink}
@@ -543,6 +603,62 @@ export function CalendarView({ calendar: initialCalendar, onBack, onUpdate }: Ca
                 </div>
               </div>
             )}
+
+            <div className="relative">
+              <button
+                onClick={() => setShowReminderDropdown(!showReminderDropdown)}
+                className="btn-secondary flex items-center gap-2 text-xs px-3 py-2"
+                style={{ color: reminderSent ? '#639922' : reminderFrequency !== 'off' ? '#C9A96E' : undefined }}
+              >
+                {sendingReminder ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
+                {sendingReminder ? 'Sending...' : reminderSent ? 'Reminder Sent!' : 'Reminders'}
+                {reminderFrequency !== 'off' && !sendingReminder && !reminderSent && (
+                  <span style={{ fontSize: '10px', color: '#C9A96E' }}>ON</span>
+                )}
+                <span style={{ fontSize: '10px' }}>▾</span>
+              </button>
+
+              {showReminderDropdown && (
+                <div className="absolute top-10 left-0 z-50 bg-white border border-[#E8E3DC] rounded-xl shadow-lg p-3 w-64">
+                  <p className="text-xs uppercase tracking-wider text-[#8C8479] font-medium mb-3">Reminders</p>
+                  <button
+                    onClick={() => { handleSendReminder(); setShowReminderDropdown(false); }}
+                    disabled={sendingReminder}
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-[#FAF8F4] mb-1"
+                    style={{ color: '#1A1612', fontWeight: 500 }}
+                  >
+                    📨 Send reminder now
+                  </button>
+                  <div className="border-t border-[#E8E3DC] pt-2 mb-1">
+                    <p className="text-xs text-[#8C8479] px-3 pb-1">Auto-remind until approved:</p>
+                  </div>
+                  <div className="space-y-1">
+                    {['off', '2 days', '3 days', '5 days', '1 week'].map(option => (
+                      <button
+                        key={option}
+                        onClick={() => { setReminderFrequency(option); setShowReminderDropdown(false); }}
+                        className="w-full text-left px-3 py-2 rounded-lg text-sm transition"
+                        style={{
+                          backgroundColor: reminderFrequency === option ? '#FAF8F4' : 'transparent',
+                          color: reminderFrequency === option ? '#C9A96E' : '#1A1612',
+                          fontWeight: reminderFrequency === option ? 600 : 400,
+                        }}
+                      >
+                        {option === 'off' ? '🔕 Off' : `🔔 Every ${option}`}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-[#E8E3DC]">
+                    <p className="text-xs text-[#8C8479]">
+                      {reminderFrequency === 'off'
+                        ? 'Turn on to automatically remind your client until all posts are approved.'
+                        : `Client will be reminded every ${reminderFrequency} until all posts are approved. 🤎`}
+                    </p>
+                    <p className="text-xs text-[#C9A96E] mt-1 font-medium">⚡ Auto-remind coming soon</p>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <button
               onClick={() => window.open(`/share/${calendar.share_token}`, '_blank')}
@@ -913,6 +1029,19 @@ export function CalendarView({ calendar: initialCalendar, onBack, onUpdate }: Ca
             loadData();
             if (onUpdate) onUpdate();
           }}
+        />
+      )}
+
+      {showGenerateCaptions && (
+        <AIContentStudio
+          calendarId={calendar.id}
+          calendarTitle={calendar.title}
+          clientName={client?.name || calendar.title}
+          clientNotes={client?.notes}
+          platforms={calendar.platforms || ['Instagram']}
+          primaryColor={client?.brand_colors?.primary || client?.primary_color || '#C9A96E'}
+          onClose={() => setShowGenerateCaptions(false)}
+          onPostsAdded={() => { loadData(); setShowGenerateCaptions(false); }}
         />
       )}
 
