@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { VISUAL_STYLES, VisualStyle } from '../lib/visualStyles';
+import { CAPTION_STYLES } from '../lib/captionStyles';
 import { CalendarDatePicker } from './CalendarDatePicker';
 import { X, Sparkles, Loader2, Plus, Check, Image, Upload } from 'lucide-react';
 
@@ -52,6 +53,7 @@ export function AIContentStudio({
   const [uploadingRef, setUploadingRef] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [generatedPosts, setGeneratedPosts] = useState<GeneratedPost[]>([]);
+  const [captionStyleId, setCaptionStyleId] = useState<string>('casual-bff');
   const [selectedPosts, setSelectedPosts] = useState<Set<number>>(new Set());
   const [addingPosts, setAddingPosts] = useState(false);
   const [error, setError] = useState('');
@@ -191,7 +193,26 @@ export function AIContentStudio({
     setStep('generating');
     setError('');
 
-    const systemPrompt = `You are an expert social media content creator for freelance social media managers. You create engaging, platform-optimized captions that drive real engagement. Always respond with valid JSON only — no markdown, no backticks, no explanation.`;
+    const chosenStyle = CAPTION_STYLES.find(s => s.id === captionStyleId) || CAPTION_STYLES[0];
+    const systemPrompt = `You are an elite social media ghostwriter. You've written captions that have pulled millions of views for top creators. You understand that the first line is the ONLY thing that matters for the scroll — if it doesn't stop the thumb, nothing else gets read.
+
+NON-NEGOTIABLE RULES:
+
+THE HOOK LAW: The first line must stop the scroll in 3-7 words. It must create curiosity, tension, emotion, or a pattern interrupt. BANNED openers: "In today's world", "Are you looking for", "We are excited to", "Let's dive in", "Picture this", "Imagine". If the first line is boring, the whole post fails.
+
+VOICE (this is the dominant style — obey it): ${chosenStyle.voiceSpec}
+
+STRUCTURE LAW: hook → build tension or stack value → deliver a payoff → soft, natural CTA. Use SHORT lines and white space for mobile reading. Never a wall of text. One idea per line where it lands harder.
+
+VARIETY LAW: Across the batch, rotate hook types so no two posts feel the same. Mix curiosity hooks, bold statements, questions, confessions, contrarian takes, and story cold-opens.
+
+HASHTAG LAW: 3-5 strategic, relevant hashtags maximum. Never hashtag soup. Mix niche and broad.
+
+ANTI-SLOP BANS: Never write "game-changer", "elevate your", "take it to the next level", "in a world where", "look no further", "the perfect", or emoji vomit. Write like a sharp human, not a brand bot.
+
+BRAND VOICE IS LAW: If brand vocabulary rules are provided, they are absolute. Use the "use" words, never the "avoid" words.
+
+Always respond with valid JSON only — no markdown, no backticks, no explanation.`;
 
     const message = `Generate ${postCount} social media posts for the following client:
 
@@ -220,7 +241,9 @@ You MUST return EXACTLY ${postCount} post objects, no more, no less. Return a JS
 - imageConcept: one sentence describing the ideal image or visual for this post
 - platform: the best platform for this post from: ${platforms.join(', ')}
 
-Make captions engaging, authentic, and optimized for each platform. Include relevant hashtags. Vary the post types. Return ONLY the JSON array, nothing else.`;
+CAPTION STYLE FOR THIS BATCH: ${chosenStyle.name} — ${chosenStyle.description}
+
+Every caption must stop the scroll on the first line, sound unmistakably like this brand, and make the reader feel something or learn something. Vary the hooks and post types across the batch. Quality over safety — these should be the best captions this brand has ever posted. Return ONLY the JSON array, nothing else.`;
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke('ai-assistant', {
