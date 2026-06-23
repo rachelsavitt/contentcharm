@@ -423,22 +423,24 @@ Every caption must stop the scroll on the first line, sound unmistakably like th
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#1A1612] mb-2">Visual Style</label>
+                <label className="block text-sm font-medium text-[#1A1612] mb-2">Caption Style</label>
+                <p className="text-xs text-[#8C8479] mb-2">The voice every caption is written in. Pick what fits this client.</p>
                 <div className="grid grid-cols-2 gap-2">
-                  {VISUAL_STYLES.map((style) => (
+                  {CAPTION_STYLES.map((style) => (
                     <button
                       key={style.id}
-                      onClick={() => setSelectedStyle(style)}
+                      type="button"
+                      onClick={() => setCaptionStyleId(style.id)}
                       className="text-left px-3 py-2 rounded-lg text-sm border transition"
                       style={{
-                        borderColor: selectedStyle.id === style.id ? primaryColor : '#E8E3DC',
-                        backgroundColor: selectedStyle.id === style.id ? primaryColor + '10' : 'white',
-                        color: selectedStyle.id === style.id ? primaryColor : '#1A1612',
-                        fontWeight: selectedStyle.id === style.id ? 600 : 400,
+                        borderColor: captionStyleId === style.id ? primaryColor : '#E8E3DC',
+                        backgroundColor: captionStyleId === style.id ? primaryColor + '10' : 'white',
+                        color: captionStyleId === style.id ? primaryColor : '#1A1612',
+                        fontWeight: captionStyleId === style.id ? 600 : 400,
                       }}
                     >
                       <span className="mr-1">{style.emoji}</span>{style.name}
-                      <p className="text-xs mt-0.5 font-normal" style={{ color: selectedStyle.id === style.id ? primaryColor : '#8C8479' }}>{style.description}</p>
+                      <p className="text-xs mt-0.5 font-normal" style={{ color: captionStyleId === style.id ? primaryColor : '#8C8479' }}>{style.description}</p>
                     </button>
                   ))}
                 </div>
