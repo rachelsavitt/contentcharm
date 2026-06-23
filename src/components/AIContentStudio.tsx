@@ -557,7 +557,7 @@ Every caption must stop the scroll on the first line, sound unmistakably like th
                         <span className="text-xs text-[#8C8479]">{post.platform}</span>
                       </div>
                       <p className="text-sm text-[#1A1612] leading-relaxed mb-2">{post.caption}</p>
-                      <p className="text-xs text-[#8C8479] italic mb-3">📸 {post.imageConcept}</p>
+                      <p className="text-xs text-[#8C8479] italic mb-3"><span className="not-italic font-medium">📸 Image inspo:</span> {post.imageConcept}</p>
                       <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs"
                         style={{ borderColor: primaryColor + '30', color: '#8C8479', backgroundColor: '#FAF8F4', border: '1px dashed ' + primaryColor + '40' }}>
                         <Sparkles className="w-3 h-3" style={{ color: primaryColor }} />
