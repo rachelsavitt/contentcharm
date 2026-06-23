@@ -41,6 +41,7 @@ export function Dashboard() {
   const location = useLocation();
   const [view, setView] = useState<View>('calendars');
   const [selectedCalendar, setSelectedCalendar] = useState<Calendar | null>(null);
+  const [autoOpenStudio, setAutoOpenStudio] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
@@ -48,7 +49,23 @@ export function Dashboard() {
   const [profileTab, setProfileTab] = useState<'account' | 'subscription'>('account');
 
   useEffect(() => {
-    const state = location.state as { view?: View; tab?: 'account' | 'subscription' };
+    const state = location.state as { view?: View; tab?: 'account' | 'subscription'; calendarId?: string; openStudio?: boolean };
+    if (state?.calendarId) {
+      (async () => {
+        const { data } = await supabase
+          .from('calendars')
+          .select('*')
+          .eq('id', state.calendarId)
+          .maybeSingle();
+        if (data) {
+          setSelectedCalendar(data);
+          setView('view-calendar');
+          if (state.openStudio) setAutoOpenStudio(true);
+        }
+      })();
+      navigate(location.pathname, { replace: true, state: {} });
+      return;
+    }
     if (state?.view) {
       setView(state.view);
       if (state.view === 'profile' && state.tab) {
@@ -307,6 +324,7 @@ export function Dashboard() {
           {view === 'view-calendar' && selectedCalendar && (
             <CalendarView
               calendar={selectedCalendar}
+              autoOpenStudio={autoOpenStudio}
               onBack={handleBack}
               onUpdate={() => {
                 // stay on calendar after save

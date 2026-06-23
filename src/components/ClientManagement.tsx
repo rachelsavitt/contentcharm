@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Plus, CreditCard as Edit2, Trash2, Users, Sparkles, Loader2, Link as LinkIcon } from 'lucide-react';
 import { ImageUpload } from './ImageUpload';
+import { CalendarDatePicker } from './CalendarDatePicker';
 import { useNavigate } from 'react-router-dom';
 
 interface Client {
@@ -39,6 +40,11 @@ export function ClientManagement() {
   const [scraping, setScraping] = useState(false);
   const [scrapeError, setScrapeError] = useState('');
   const [scrapedDNA, setScrapedDNA] = useState<any>(null);
+  const [expressClient, setExpressClient] = useState<any>(null);
+  const [expressPlatforms, setExpressPlatforms] = useState<string[]>(['Instagram']);
+  const [expressDates, setExpressDates] = useState<string[]>([]);
+  const [expressApproval, setExpressApproval] = useState('');
+  const [expressLoading, setExpressLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -157,7 +163,7 @@ export function ClientManagement() {
         return;
       }
     } else {
-      const { error } = await supabase
+      const { data: newClient, error } = await supabase
         .from('clients')
         .insert({
           user_id: user!.id,
@@ -169,18 +175,76 @@ export function ClientManagement() {
           brand_dna: scrapedDNA || editingClient?.brand_dna || null,
           brand_fonts: formData.brand_fonts,
           notes: formData.notes
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Error creating client:', error);
         return;
       }
+
+      // New client created — offer the express "first month" flow instead of just closing
+      setExpressClient(newClient);
+      setShowModal(false);
+      setEditingClient(null);
+      resetForm();
+      loadClients();
+      return;
     }
 
     setShowModal(false);
     setEditingClient(null);
     resetForm();
     loadClients();
+  };
+
+  const handleExpressGenerate = async () => {
+    if (!expressClient || expressPlatforms.length === 0) return;
+    setExpressLoading(true);
+    try {
+      const sorted = [...expressDates].sort();
+      const firstDate = sorted[0] || new Date().toISOString().split('T')[0];
+      const d = new Date(firstDate + 'T00:00:00');
+      const title = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+      let approval = expressApproval;
+      if (!approval && sorted[0]) {
+        const due = new Date(firstDate + 'T00:00:00');
+        due.setDate(due.getDate() - 3);
+        approval = due.toISOString().split('T')[0];
+      }
+
+      const { data: newCal, error } = await supabase
+        .from('calendars')
+        .insert({
+          user_id: user!.id,
+          client_id: expressClient.id,
+          title,
+          platforms: expressPlatforms,
+          cover_image_url: null,
+          approval_deadline: approval || null,
+          niche: '',
+          audience: '',
+          time_period: 30,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const calId = newCal.id;
+      setExpressClient(null);
+      setExpressDates([]);
+      setExpressPlatforms(['Instagram']);
+      setExpressApproval('');
+      navigate('/dashboard', { state: { view: 'view-calendar', calendarId: calId, openStudio: true } });
+    } catch (err) {
+      console.error('Express generate error:', err);
+      alert('Could not create the calendar. Please try again.');
+    } finally {
+      setExpressLoading(false);
+    }
   };
 
   const handleEdit = (client: Client) => {
@@ -368,6 +432,80 @@ export function ClientManagement() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {expressClient && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-[14px] max-w-lg w-full max-h-[90vh] overflow-y-auto" style={{ boxShadow: '0 6px 24px rgba(26, 22, 18, 0.15)' }}>
+            <div className="p-6 border-b border-[#E8E3DC] flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#C9A96E]" fill="#C9A96E" />
+              <h2 className="text-2xl text-[#1A1612]" style={{ fontFamily: 'DM Serif Display, serif' }}>
+                Generate {expressClient.name}'s first month
+              </h2>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="label-uppercase block mb-2">Platforms</label>
+                <div className="flex flex-wrap gap-2">
+                  {['Instagram', 'Facebook', 'TikTok', 'LinkedIn', 'Pinterest'].map((pf) => (
+                    <button
+                      key={pf}
+                      type="button"
+                      onClick={() => setExpressPlatforms((prev) => prev.includes(pf) ? prev.filter((x) => x !== pf) : [...prev, pf])}
+                      className="px-3 py-1.5 rounded-[10px] text-sm border transition"
+                      style={{
+                        borderColor: expressPlatforms.includes(pf) ? '#C9A96E' : '#E8E3DC',
+                        backgroundColor: expressPlatforms.includes(pf) ? '#C9A96E10' : 'white',
+                        color: expressPlatforms.includes(pf) ? '#C9A96E' : '#1A1612',
+                        fontWeight: expressPlatforms.includes(pf) ? 600 : 400,
+                      }}
+                    >
+                      {pf}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="label-uppercase block mb-2">Posting dates</label>
+                <div className="flex justify-center">
+                  <CalendarDatePicker selectedDates={expressDates} onDatesChange={setExpressDates} primaryColor="#C9A96E" />
+                </div>
+              </div>
+
+              <div>
+                <label className="label-uppercase block mb-2">Approval due date <span className="text-[#8C8479] font-normal normal-case">(optional)</span></label>
+                <input
+                  type="date"
+                  value={expressApproval}
+                  onChange={(e) => setExpressApproval(e.target.value)}
+                  className="w-full px-4 py-2 border border-[#E8E3DC] rounded-[10px] focus:ring-2 focus:ring-[#C9A96E] focus:border-transparent text-[#1A1612]"
+                />
+                <p className="text-xs text-[#8C8479] mt-1">Leave blank to default to 3 days before the first post.</p>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-[#E8E3DC] flex gap-3">
+              <button
+                type="button"
+                onClick={() => { setExpressClient(null); setExpressDates([]); setExpressPlatforms(['Instagram']); setExpressApproval(''); }}
+                className="flex-1 px-4 py-2 border border-[#E8E3DC] text-[#1A1612] rounded-[10px] hover:bg-[#FAF8F4] transition text-sm"
+              >
+                Skip for now
+              </button>
+              <button
+                type="button"
+                onClick={handleExpressGenerate}
+                disabled={expressLoading || expressPlatforms.length === 0}
+                className="flex-1 px-4 py-2 text-white rounded-[10px] text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-60"
+                style={{ backgroundColor: '#C9A96E' }}
+              >
+                {expressLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating...</> : <><Sparkles className="w-4 h-4" fill="white" /> Generate content</>}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

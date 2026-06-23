@@ -40,7 +40,7 @@ const ALL_PLATFORMS = [
   'Snapchat',
 ];
 
-export function CalendarView({ calendar: initialCalendar, onBack, onUpdate }: CalendarViewProps) {
+export function CalendarView({ calendar: initialCalendar, autoOpenStudio, onBack, onUpdate }: CalendarViewProps) {
   const [calendar, setCalendar] = useState(initialCalendar);
   const [client, setClient] = useState<Client | null>(null);
   const [posts, setPosts] = useState<CalendarPost[]>([]);
@@ -54,6 +54,11 @@ export function CalendarView({ calendar: initialCalendar, onBack, onUpdate }: Ca
   const [reminderFrequency, setReminderFrequency] = useState('off');
   const [showReminderDropdown, setShowReminderDropdown] = useState(false);
   const [showGenerateCaptions, setShowGenerateCaptions] = useState(false);
+  useEffect(() => {
+    if (autoOpenStudio) {
+      setShowGenerateCaptions(true);
+    }
+  }, [autoOpenStudio]);
 
   const handleSendReminder = async () => {
     const pendingPosts = posts.filter(p => p.approval_status === 'pending' || p.approval_status === 'revision_requested');
