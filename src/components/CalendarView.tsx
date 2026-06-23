@@ -1038,6 +1038,7 @@ export function CalendarView({ calendar: initialCalendar, onBack, onUpdate }: Ca
           calendarTitle={calendar.title}
           clientName={client?.name || calendar.title}
           clientNotes={client?.notes}
+          clientDNA={client?.brand_dna}
           platforms={calendar.platforms || ['Instagram']}
           primaryColor={client?.brand_colors?.primary || client?.primary_color || '#C9A96E'}
           onClose={() => setShowGenerateCaptions(false)}

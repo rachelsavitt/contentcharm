@@ -19,6 +19,7 @@ interface AIContentStudioProps {
   calendarTitle: string;
   clientName: string;
   clientNotes?: string;
+  clientDNA?: any;
   platforms: string[];
   primaryColor: string;
   onClose: () => void;
@@ -30,19 +31,20 @@ export function AIContentStudio({
   calendarTitle,
   clientName,
   clientNotes,
+  clientDNA,
   platforms,
   primaryColor,
   onClose,
   onPostsAdded,
 }: AIContentStudioProps) {
-  const [step, setStep] = useState<'url' | 'setup' | 'generating' | 'review'>('url');
-  const [industry, setIndustry] = useState('');
-  const [tone, setTone] = useState('professional yet approachable');
+  const [step, setStep] = useState<'url' | 'setup' | 'generating' | 'review'>(clientDNA ? 'setup' : 'url');
+  const [industry, setIndustry] = useState(clientDNA?.industry || '');
+  const [tone, setTone] = useState(clientDNA?.toneOfVoice || 'professional yet approachable');
   const [postCount, setPostCount] = useState('12');
-  const [additionalContext, setAdditionalContext] = useState('');
+  const [additionalContext, setAdditionalContext] = useState(clientDNA ? [clientDNA.brandSummary, clientDNA.targetAudience ? 'Target audience: ' + clientDNA.targetAudience : '', clientDNA.messagingThemes?.length ? 'Themes: ' + clientDNA.messagingThemes.join(', ') : '', clientDNA.keyServices?.length ? 'Services: ' + clientDNA.keyServices.join(', ') : '', clientDNA.vocabularyToUse?.length ? 'Use words like: ' + clientDNA.vocabularyToUse.join(', ') : '', clientDNA.vocabularyToAvoid?.length ? 'Avoid words like: ' + clientDNA.vocabularyToAvoid.join(', ') : ''].filter(Boolean).join('. ') : '');
   const [clientUrl, setClientUrl] = useState('');
   const [scraping, setScraping] = useState(false);
-  const [brandDNA, setBrandDNA] = useState<any>(null);
+  const [brandDNA, setBrandDNA] = useState<any>(clientDNA || null);
   const [scrapeError, setScrapeError] = useState('');
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
