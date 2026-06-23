@@ -12,7 +12,7 @@ export const CAPTION_STYLES: CaptionStyle[] = [
     name: 'Casual BFF',
     emoji: '☕',
     description: 'Like texting your best friend. Warm, real, unpolished.',
-    voiceSpec: `Write like you're talking to your best friend over coffee. Lowercase is welcome. Open mid-thought, no "hey guys." Conversational, a little messy, deeply human. Short punchy lines. No corporate polish. Use "you" and "i" naturally. It should feel like a real person typed it on their phone, not a brand. Permission to be vulnerable, funny, or random. Never salesy.`,
+    voiceSpec: `Write like you're talking to your best friend over coffee. Open mid-thought, no "hey guys." Conversational, a little messy, deeply human. Short punchy lines. No corporate polish. Use "you" and "i" naturally. It should feel like a real person typed it on their phone, not a brand. Permission to be vulnerable, funny, or random. Never salesy.`,
   },
   {
     id: 'punchy-bold',

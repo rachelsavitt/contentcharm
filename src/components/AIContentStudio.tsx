@@ -202,6 +202,8 @@ export function AIContentStudio({
 
 NON-NEGOTIABLE RULES:
 
+CAPITALIZATION LAW: Always use correct, standard capitalization — capitalize the first letter of every sentence and all proper nouns. Never write in all-lowercase. This is non-negotiable regardless of style.
+
 THE HOOK LAW: The first line must stop the scroll in 3-7 words. It must create curiosity, tension, emotion, or a pattern interrupt. BANNED openers: "In today's world", "Are you looking for", "We are excited to", "Let's dive in", "Picture this", "Imagine". If the first line is boring, the whole post fails.
 
 VOICE (this is the dominant style — obey it): ${chosenStyle.voiceSpec}
