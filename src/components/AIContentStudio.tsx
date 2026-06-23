@@ -264,10 +264,10 @@ Every caption must stop the scroll on the first line, sound unmistakably like th
       setGeneratedPosts(posts);
       setSelectedPosts(new Set(posts.map((_: any, i: number) => i)));
       setStep('review');
-      // Auto-generate images for all posts
-      posts.forEach((_: any, i: number) => {
-        setTimeout(() => handleGenerateImageAuto(posts, i), i * 500);
-      });
+      // Image generation paused — coming soon (image-to-image with real brand assets)
+      // posts.forEach((_: any, i: number) => {
+      //   setTimeout(() => handleGenerateImageAuto(posts, i), i * 500);
+      // });
     } catch (err: any) {
       console.error('Generation error:', err);
       setError('Failed to generate captions. Please try again.');
@@ -506,7 +506,7 @@ Every caption must stop the scroll on the first line, sound unmistakably like th
               <p className="text-lg font-medium text-[#1A1612]" style={{ fontFamily: 'DM Serif Display, serif' }}>
                 Generating your content...
               </p>
-              <p className="text-sm text-[#8C8479]">Writing captions + generating images — hang tight!</p>
+              <p className="text-sm text-[#8C8479]">Writing your captions — hang tight!</p>
             </div>
           )}
 
@@ -558,16 +558,11 @@ Every caption must stop the scroll on the first line, sound unmistakably like th
                       </div>
                       <p className="text-sm text-[#1A1612] leading-relaxed mb-2">{post.caption}</p>
                       <p className="text-xs text-[#8C8479] italic mb-3">📸 {post.imageConcept}</p>
-                      {post.imageUrl ? (
-                        <img src={post.imageUrl} alt="Generated" className="w-full h-40 object-cover rounded-lg" />
-                      ) : (
-                        <button onClick={() => handleGenerateImage(i)} disabled={post.generatingImage}
-                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs border transition"
-                          style={{ borderColor: primaryColor + '40', color: primaryColor, backgroundColor: primaryColor + '08' }}>
-                          {post.generatingImage ? <Loader2 className="w-3 h-3 animate-spin" /> : <Image className="w-3 h-3" />}
-                          {post.generatingImage ? 'Generating...' : 'Generate image'}
-                        </button>
-                      )}
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs"
+                        style={{ borderColor: primaryColor + '30', color: '#8C8479', backgroundColor: '#FAF8F4', border: '1px dashed ' + primaryColor + '40' }}>
+                        <Sparkles className="w-3 h-3" style={{ color: primaryColor }} />
+                        AI images — coming soon
+                      </div>
                     </div>
                   </div>
                 </div>
