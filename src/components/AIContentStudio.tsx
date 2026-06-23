@@ -185,6 +185,10 @@ export function AIContentStudio({
   };
 
   const handleGenerate = async () => {
+    if (selectedDates.length === 0) {
+      setError('Pick at least one posting date on the calendar first.');
+      return;
+    }
     if (!industry) {
       setError('Please select an industry');
       return;
@@ -214,7 +218,8 @@ BRAND VOICE IS LAW: If brand vocabulary rules are provided, they are absolute. U
 
 Always respond with valid JSON only — no markdown, no backticks, no explanation.`;
 
-    const message = `Generate ${postCount} social media posts for the following client:
+    const effectiveCount = selectedDates.length > 0 ? selectedDates.length : parseInt(postCount) || 12;
+    const message = `Generate ${effectiveCount} social media posts for the following client:
 
 Client Name: ${clientName}
 Industry: ${industry}
@@ -234,7 +239,7 @@ BRAND DNA (follow this closely so every post sounds like this brand):
 - Vocabulary to USE: ${(brandDNA.vocabularyToUse || []).join(', ')}
 - Vocabulary to AVOID: ${(brandDNA.vocabularyToAvoid || []).join(', ')}` : ''}
 
-You MUST return EXACTLY ${postCount} post objects, no more, no less. Return a JSON array of ${postCount} post objects. Each object must have exactly these fields:
+You MUST return EXACTLY ${effectiveCount} post objects, no more, no less. Return a JSON array of ${effectiveCount} post objects. Each object must have exactly these fields:
 - title: short post title (5 words max)
 - caption: full social media caption with hashtags (platform-appropriate length)
 - postType: one of "Reel", "Carousel", "Static Image", "Story"
@@ -582,11 +587,12 @@ Every caption must stop the scroll on the first line, sound unmistakably like th
               </button>
               <button
                 onClick={handleGenerate}
-                className="flex-1 px-4 py-2 text-white rounded-lg transition text-sm font-medium flex items-center justify-center gap-2"
+                disabled={selectedDates.length === 0}
+                className="flex-1 px-4 py-2 text-white rounded-lg transition text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50"
                 style={{ backgroundColor: primaryColor }}
               >
                 <Sparkles className="w-4 h-4" fill="white" />
-                Generate {postCount} posts
+                {selectedDates.length === 0 ? 'Pick dates to generate' : `Generate ${selectedDates.length} post${selectedDates.length === 1 ? '' : 's'}`}
               </button>
             </>
           )}
