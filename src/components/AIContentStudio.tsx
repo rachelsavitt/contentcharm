@@ -54,6 +54,7 @@ export function AIContentStudio({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [generatedPosts, setGeneratedPosts] = useState<GeneratedPost[]>([]);
   const [captionStyleId, setCaptionStyleId] = useState<string>('casual-bff');
+  const [captionLength, setCaptionLength] = useState<'short' | 'medium' | 'long'>('medium');
   const [selectedPosts, setSelectedPosts] = useState<Set<number>>(new Set());
   const [addingPosts, setAddingPosts] = useState(false);
   const [error, setError] = useState('');
@@ -207,6 +208,8 @@ CAPITALIZATION LAW: Always use correct, standard capitalization — capitalize t
 THE HOOK LAW: The first line must stop the scroll in 3-7 words. It must create curiosity, tension, emotion, or a pattern interrupt. BANNED openers: "In today's world", "Are you looking for", "We are excited to", "Let's dive in", "Picture this", "Imagine". If the first line is boring, the whole post fails.
 
 VOICE (this is the dominant style — obey it): ${chosenStyle.voiceSpec}
+
+LENGTH: ${captionLength === 'short' ? 'SHORT — 1-2 punchy lines, hook-forward, under ~40 words. The hook practically IS the caption. No filler.' : captionLength === 'long' ? 'LONG — full storytelling, multiple short paragraphs with line breaks, carousel-level depth. Take the reader on a journey, but every line must earn its place.' : 'MEDIUM — a few tight lines: hook, then value or story, then a soft CTA. The everyday workhorse length.'} (Balance this against the post type — a carousel still needs enough to justify swiping, even if short is requested.)
 
 STRUCTURE LAW: hook → build tension or stack value → deliver a payoff → soft, natural CTA. Use SHORT lines and white space for mobile reading. Never a wall of text. One idea per line where it lands harder.
 
@@ -451,6 +454,31 @@ Every caption must stop the scroll on the first line, sound unmistakably like th
                     </button>
                   ))}
                 </div>
+              </div>
+
+<div className="mb-5">
+                <label className="block text-sm font-medium text-[#1A1612] mb-2">Caption Length</label>
+                <div className="flex gap-2">
+                  {(['short', 'medium', 'long'] as const).map((len) => (
+                    <button
+                      key={len}
+                      type="button"
+                      onClick={() => setCaptionLength(len)}
+                      className="flex-1 px-3 py-2 rounded-lg text-sm border transition capitalize"
+                      style={{
+                        borderColor: captionLength === len ? primaryColor : '#E8E3DC',
+                        backgroundColor: captionLength === len ? primaryColor + '10' : 'white',
+                        color: captionLength === len ? primaryColor : '#1A1612',
+                        fontWeight: captionLength === len ? 600 : 400,
+                      }}
+                    >
+                      {len}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-[#8C8479] mt-1">
+                  {captionLength === 'short' ? 'Punchy 1-2 liners.' : captionLength === 'long' ? 'Full storytelling, multi-paragraph.' : 'Hook + value + CTA. The everyday default.'}
+                </p>
               </div>
 
               <div>
