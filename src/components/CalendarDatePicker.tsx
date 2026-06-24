@@ -12,6 +12,7 @@ export function CalendarDatePicker({ selectedDates, onDatesChange, primaryColor 
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
+  const [rangeStart, setRangeStart] = useState<string | null>(null);
 
   const year = viewMonth.getFullYear();
   const month = viewMonth.getMonth();
@@ -21,11 +22,36 @@ export function CalendarDatePicker({ selectedDates, onDatesChange, primaryColor 
   const monthName = viewMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   const toggleDate = (dateStr: string) => {
+    // If clicking an already-selected day, just remove it (fine-tune)
     if (selectedDates.includes(dateStr)) {
       onDatesChange(selectedDates.filter(d => d !== dateStr));
-    } else {
-      onDatesChange([...selectedDates, dateStr].sort());
+      setRangeStart(null);
+      return;
     }
+    // No pending start yet: set this as the range start and select it
+    if (!rangeStart) {
+      setRangeStart(dateStr);
+      onDatesChange([...selectedDates, dateStr].sort());
+      return;
+    }
+    // We have a start: fill the range from start to this click (inclusive)
+    const start = rangeStart < dateStr ? rangeStart : dateStr;
+    const end = rangeStart < dateStr ? dateStr : rangeStart;
+    const filled: string[] = [];
+    const cur = new Date(start + 'T00:00:00');
+    const last = new Date(end + 'T00:00:00');
+    while (cur <= last) {
+      filled.push(cur.toISOString().split('T')[0]);
+      cur.setDate(cur.getDate() + 1);
+    }
+    const merged = Array.from(new Set([...selectedDates, ...filled])).sort();
+    onDatesChange(merged);
+    setRangeStart(null);
+  };
+
+  const clearDates = () => {
+    onDatesChange([]);
+    setRangeStart(null);
   };
 
   const prevMonth = () => setViewMonth(new Date(year, month - 1, 1));
