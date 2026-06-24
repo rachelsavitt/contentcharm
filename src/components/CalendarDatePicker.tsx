@@ -71,6 +71,17 @@ export function CalendarDatePicker({ selectedDates, onDatesChange, primaryColor 
         </button>
       </div>
 
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[11px] text-[#8C8479]">
+          {rangeStart ? 'Now click the end date' : 'Tip: click a start date, then an end date'}
+        </p>
+        {selectedDates.length > 0 && (
+          <button type="button" onClick={clearDates} className="text-[11px] font-medium" style={{ color: primaryColor }}>
+            Clear ({selectedDates.length})
+          </button>
+        )}
+      </div>
+
       <div className="grid grid-cols-7 gap-1 mb-2">
         {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
           <div key={d} className="text-center text-xs text-[#8C8479] font-medium py-1">{d}</div>
