@@ -204,17 +204,11 @@ export function ClientManagement() {
     if (!expressClient || expressPlatforms.length === 0) return;
     setExpressLoading(true);
     try {
-      const sorted = [...expressDates].sort();
-      const firstDate = sorted[0] || new Date().toISOString().split('T')[0];
-      const d = new Date(firstDate + 'T00:00:00');
-      const title = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
-      let approval = expressApproval;
-      if (!approval && sorted[0]) {
-        const due = new Date(firstDate + 'T00:00:00');
-        due.setDate(due.getDate() - 3);
-        approval = due.toISOString().split('T')[0];
-      }
+      // Dates are now picked in the Studio. Default the calendar title to next month.
+      const now = new Date();
+      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const title = nextMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      const approval = expressApproval || null;
 
       const { data: newCal, error } = await supabase
         .from('calendars')
@@ -470,13 +464,6 @@ export function ClientManagement() {
               </div>
 
               <div>
-                <label className="label-uppercase block mb-2">Posting dates</label>
-                <div className="flex justify-center">
-                  <CalendarDatePicker selectedDates={expressDates} onDatesChange={setExpressDates} primaryColor="#C9A96E" />
-                </div>
-              </div>
-
-              <div>
                 <label className="label-uppercase block mb-2">Approval due date <span className="text-[#8C8479] font-normal normal-case">(optional)</span></label>
                 <input
                   type="date"
@@ -484,7 +471,7 @@ export function ClientManagement() {
                   onChange={(e) => setExpressApproval(e.target.value)}
                   className="w-full px-4 py-2 border border-[#E8E3DC] rounded-[10px] focus:ring-2 focus:ring-[#C9A96E] focus:border-transparent text-[#1A1612]"
                 />
-                <p className="text-xs text-[#8C8479] mt-1">Leave blank to default to 3 days before the first post.</p>
+                <p className="text-xs text-[#8C8479] mt-1">Optional — you can set this anytime.</p>
               </div>
             </div>
 
