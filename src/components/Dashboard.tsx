@@ -152,6 +152,9 @@ export function Dashboard() {
 
     if (!error && data) {
       handleCalendarSelect(data);
+    } else {
+      // Client has no calendar yet — send them to create one
+      setView('create-calendar');
     }
     setSidebarOpen(false);
   };
