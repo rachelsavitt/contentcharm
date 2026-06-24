@@ -12,28 +12,23 @@ interface OnboardingStep {
 const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 'welcome',
-    title: 'Welcome to Content Charm! 🎉',
-    description: 'Stop chasing client approvals over email. Content Charm gives your clients a beautiful, branded page to review, approve, and request edits on your content — in one place.',
+    title: 'Welcome to Content Charm 🤎',
+    description: 'Turn any client\'s website into a month of on-brand content they approve in one tap. No more chasing approvals over email.',
   },
   {
-    id: 'calendars',
-    title: 'Your Calendars',
-    description: 'This is your home base. Every client gets their own content calendar. Create as many as you need and keep everything organized in one place.',
+    id: 'how',
+    title: 'One link does it all',
+    description: 'Paste a client\'s website and we build their brand profile automatically — voice, colors, themes. Then we generate a month of captions that sound exactly like them.',
   },
   {
-    id: 'clients',
-    title: 'Client Management',
-    description: 'Add your clients here with their name and branding. Once added, you can connect them to any calendar and generate a shareable approval link in seconds.',
-  },
-  {
-    id: 'create',
-    title: 'Create Your First Calendar',
-    description: 'Hit the New Calendar button to set up your first client. Add your posts, set the dates, and share the link — your client gets a clean approval page with zero back and forth.',
+    id: 'approve',
+    title: 'They approve in one tap',
+    description: 'Send your client one clean link. They review everything on a beautiful branded page and approve with a single tap — no logins, no back-and-forth.',
   },
   {
     id: 'complete',
-    title: 'You\'re All Set! 🚀',
-    description: 'You\'re ready to send your first calendar to a client. Hit New Calendar to get started — it takes less than 2 minutes.',
+    title: 'Let\'s set up your first client',
+    description: 'All you need is their website. We\'ll handle the brand profile and the first month of content — it takes about a minute.',
   },
 ];
 
@@ -99,7 +94,7 @@ export function Onboarding({ onComplete, onOpenCalendarCreator }: OnboardingProp
         <div className="p-7">
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1 min-w-0">
-              <h3 className="text-xl font-bold text-gray-900 mb-2 break-words">
+              <h3 className="text-2xl text-[#1A1612] mb-2 break-words" style={{ fontFamily: 'DM Serif Display, serif' }}>
                 {step.title}
               </h3>
               <p className="text-gray-600 leading-relaxed break-words">
@@ -121,11 +116,10 @@ export function Onboarding({ onComplete, onOpenCalendarCreator }: OnboardingProp
                   key={index}
                   className={`h-2 rounded-full transition-all duration-300 ${
                     index === currentStep
-                      ? 'w-8 bg-blue-600'
-                      : index < currentStep
-                      ? 'w-2 bg-blue-400'
-                      : 'w-2 bg-gray-300'
+                      ? 'w-8'
+                      : 'w-2'
                   }`}
+                  style={{ backgroundColor: index === currentStep ? '#C9A96E' : index < currentStep ? '#C9A96E80' : '#E8E3DC' }}
                 />
               ))}
             </div>
@@ -142,11 +136,12 @@ export function Onboarding({ onComplete, onOpenCalendarCreator }: OnboardingProp
               )}
               <button
                 onClick={handleNext}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-colors whitespace-nowrap"
+                style={{ backgroundColor: '#C9A96E' }}
               >
                 {isLastStep ? (
                   <>
-                    New Calendar
+                    Add your first client
                     <ArrowRight className="w-4 h-4" />
                   </>
                 ) : (
