@@ -148,6 +148,13 @@ export function CalendarView({ calendar: initialCalendar, autoOpenStudio, onBack
 
       if (error) throw error;
       setPosts(postsData || []);
+
+      // Jump the calendar to the month where the content actually lives
+      const firstDated = (postsData || []).find((p: any) => p.scheduled_date);
+      if (firstDated?.scheduled_date) {
+        const d = new Date(firstDated.scheduled_date + 'T12:00:00');
+        if (!isNaN(d.getTime())) setCurrentMonth(new Date(d.getFullYear(), d.getMonth(), 1));
+      }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
