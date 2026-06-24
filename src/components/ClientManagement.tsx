@@ -40,6 +40,7 @@ export function ClientManagement() {
   const [scraping, setScraping] = useState(false);
   const [scrapeError, setScrapeError] = useState('');
   const [scrapedDNA, setScrapedDNA] = useState<any>(null);
+  const [manualMode, setManualMode] = useState(false);
   const [expressClient, setExpressClient] = useState<any>(null);
   const [expressPlatforms, setExpressPlatforms] = useState<string[]>(['Instagram']);
   const [expressDates, setExpressDates] = useState<string[]>([]);
@@ -520,34 +521,36 @@ export function ClientManagement() {
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {!editingClient && (
-                <div className="rounded-[12px] p-4 border" style={{ borderColor: '#C9A96E55', backgroundColor: '#C9A96E0D' }}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Sparkles className="w-4 h-4 text-[#C9A96E]" fill="#C9A96E" />
-                    <span className="text-sm font-semibold text-[#1A1612]">Start with their website</span>
-                  </div>
-                  <p className="text-xs text-[#8C8479] mb-3">Paste your client's URL and we'll auto-fill their brand profile.</p>
-                  <div className="flex gap-2">
+                <div className="text-center py-4">
+                  <h3 className="text-2xl text-[#1A1612] mb-1" style={{ fontFamily: 'DM Serif Display, serif' }}>One link. Their whole brand, ready.</h3>
+                  <p className="text-sm text-[#8C8479] mb-5">Paste your client's website and we'll build their brand profile in seconds.</p>
+                  <div className="flex gap-2 max-w-md mx-auto">
                     <input
                       type="text"
                       value={scrapeUrl}
                       onChange={(e) => setScrapeUrl(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleScrapeForClient(); } }}
-                      placeholder="glowandgrace.com"
-                      className="flex-1 px-3 py-2 border border-[#E8E3DC] rounded-[10px] text-sm focus:ring-2 focus:ring-[#C9A96E] focus:border-transparent text-[#1A1612]"
+                      placeholder="theirwebsite.com"
+                      className="flex-1 px-4 py-3 border border-[#E8E3DC] rounded-[12px] text-sm focus:ring-2 focus:ring-[#C9A96E] focus:border-transparent text-[#1A1612]"
                     />
                     <button
                       type="button"
                       onClick={handleScrapeForClient}
                       disabled={scraping}
-                      className="px-4 py-2 rounded-[10px] text-white text-sm font-medium flex items-center gap-2 disabled:opacity-60"
+                      className="px-5 py-3 rounded-[12px] text-white text-sm font-semibold flex items-center gap-2 disabled:opacity-60 whitespace-nowrap"
                       style={{ backgroundColor: '#C9A96E' }}
                     >
-                      {scraping ? <><Loader2 className="w-4 h-4 animate-spin" /> Reading...</> : <>Auto-fill</>}
+                      {scraping ? <><Loader2 className="w-4 h-4 animate-spin" /> Reading...</> : <><Sparkles className="w-4 h-4" fill="white" /> Build their brand profile</>}
                     </button>
                   </div>
                   {scrapeError && <p className="text-xs text-[#D4614A] mt-2">{scrapeError}</p>}
+                  {!scrapedDNA && !manualMode && (
+                    <button type="button" onClick={() => setManualMode(true)} className="text-xs text-[#8C8479] underline mt-3 hover:text-[#1A1612]">
+                      or set up manually
+                    </button>
+                  )}
                   {scrapedDNA && !scrapeError && (
-                    <div className="mt-3 text-xs text-[#5C564E]">
+                    <div className="mt-4 text-xs text-[#5C564E] text-left max-w-md mx-auto bg-[#C9A96E0D] border border-[#C9A96E33] rounded-[12px] p-3">
                       <span className="font-semibold text-[#1A1612]">Got it.</span> {scrapedDNA.brandSummary}
                       {scrapedDNA.messagingThemes?.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
@@ -560,6 +563,9 @@ export function ClientManagement() {
                   )}
                 </div>
               )}
+
+              {(editingClient || scrapedDNA || manualMode) && (
+              <>
 
               <div>
                 <label className="label-uppercase block mb-2">
@@ -671,6 +677,8 @@ export function ClientManagement() {
                   placeholder="Internal notes about this client..."
                 />
               </div>
+              </>
+              )}
 
               <div className="flex gap-3 pt-4">
                 <button
@@ -679,6 +687,7 @@ export function ClientManagement() {
                     setShowModal(false);
                     setEditingClient(null);
                     resetForm();
+                    setManualMode(false);
                   }}
                   className="btn-secondary flex-1"
                 >
