@@ -132,7 +132,7 @@ export function GridShareView() {
         <p style={{ fontSize: '13px', color: muted, lineHeight: 1.5 }}>Here's the feed your social media manager planned for you. Take a look below.</p>
       </div>
 
-      <div className="share-layout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '44px', flexWrap: 'wrap' }}>
+      <div className="share-layout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '36px', flexWrap: 'wrap', maxWidth: '740px', margin: '0 auto' }}>
         {phone}
         {noteCard}
       </div>
