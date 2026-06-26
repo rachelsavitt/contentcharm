@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 const TILES = [
   { type: 'Reel', bg: 'linear-gradient(150deg,#F0D9C2,#E3B98F)' },
@@ -29,16 +30,59 @@ export function GridPlanner() {
   const avaRef = useRef<HTMLInputElement>(null);
   const gridRef = useRef<HTMLInputElement>(null);
 
+  // Stage 4: save + email gate
+  const [showGate, setShowGate] = useState(false);
+  const [email, setEmail] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [savedLink, setSavedLink] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState('');
+  const [copied, setCopied] = useState(false);
+
   const onAva = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]; if (f) setAvatar(URL.createObjectURL(f));
+    const f = e.target.files?.[0];
+    if (f) setAvatar(URL.createObjectURL(f));
   };
   const onGrid = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setImages(prev => {
-      const next = [...prev]; let fi = 0;
-      for (let i = 0; i < next.length && fi < files.length; i++) { next[i] = URL.createObjectURL(files[fi]); fi++; }
+    setImages((prev) => {
+      const next = [...prev];
+      let fi = 0;
+      for (let i = 0; i < next.length && fi < files.length; i++) {
+        next[i] = URL.createObjectURL(files[fi]);
+        fi++;
+      }
       return next;
     });
+  };
+
+  const handleSave = async () => {
+    if (!email.trim() || !email.includes('@')) {
+      setSaveError('Please enter a valid email');
+      return;
+    }
+    setSaving(true);
+    setSaveError('');
+    try {
+      const token = Math.random().toString(36).slice(2, 10);
+      await supabase.from('grid_leads').insert({ email: email.trim(), source: 'grid_planner' });
+      const { error } = await supabase.from('grids').insert({
+        share_token: token,
+        email: email.trim(),
+        client_handle: handle,
+        client_bio: bio,
+        stat_posts: posts,
+        stat_followers: followers,
+        stat_following: following,
+        note_to_client: note,
+        tiles: TILES,
+      });
+      if (error) throw error;
+      setSavedLink(`${window.location.origin}/g/${token}`);
+    } catch (err) {
+      setSaveError('Something went wrong saving your grid. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const cream = '#FAF8F4', gold = '#C9A96E', ink = '#1A1612', border = '#E8E3DC', muted = '#8C8479';
@@ -70,15 +114,15 @@ export function GridPlanner() {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                      <input value={handle} onChange={e => setHandle(e.target.value)} style={{ fontSize: '19px', border: 'none', borderBottom: '1.5px dashed ' + border, outline: 'none', background: 'transparent', color: '#262626', minWidth: '80px', maxWidth: '160px' }} />
+                      <input value={handle} onChange={(e) => setHandle(e.target.value)} style={{ fontSize: '19px', border: 'none', borderBottom: '1.5px dashed ' + border, outline: 'none', background: 'transparent', color: '#262626', minWidth: '80px', maxWidth: '160px' }} />
                       <button style={{ background: '#efefef', border: 'none', borderRadius: '8px', padding: '7px 16px', fontSize: '13px', fontWeight: 600 }}>Following</button>
                     </div>
                     <div style={{ display: 'flex', gap: '28px', marginBottom: '12px' }}>
-                      <div style={{ fontSize: '14px', textAlign: 'center' }}><input value={posts} onChange={e => setPosts(e.target.value)} style={{ width: '46px', fontWeight: 700, border: 'none', borderBottom: '1.5px dashed ' + border, outline: 'none', textAlign: 'center', background: 'transparent' }} /><div>posts</div></div>
-                      <div style={{ fontSize: '14px', textAlign: 'center' }}><input value={followers} onChange={e => setFollowers(e.target.value)} style={{ width: '54px', fontWeight: 700, border: 'none', borderBottom: '1.5px dashed ' + border, outline: 'none', textAlign: 'center', background: 'transparent' }} /><div>followers</div></div>
-                      <div style={{ fontSize: '14px', textAlign: 'center' }}><input value={following} onChange={e => setFollowing(e.target.value)} style={{ width: '46px', fontWeight: 700, border: 'none', borderBottom: '1.5px dashed ' + border, outline: 'none', textAlign: 'center', background: 'transparent' }} /><div>following</div></div>
+                      <div style={{ fontSize: '14px', textAlign: 'center' }}><input value={posts} onChange={(e) => setPosts(e.target.value)} style={{ width: '46px', fontWeight: 700, border: 'none', borderBottom: '1.5px dashed ' + border, outline: 'none', textAlign: 'center', background: 'transparent' }} /><div>posts</div></div>
+                      <div style={{ fontSize: '14px', textAlign: 'center' }}><input value={followers} onChange={(e) => setFollowers(e.target.value)} style={{ width: '54px', fontWeight: 700, border: 'none', borderBottom: '1.5px dashed ' + border, outline: 'none', textAlign: 'center', background: 'transparent' }} /><div>followers</div></div>
+                      <div style={{ fontSize: '14px', textAlign: 'center' }}><input value={following} onChange={(e) => setFollowing(e.target.value)} style={{ width: '46px', fontWeight: 700, border: 'none', borderBottom: '1.5px dashed ' + border, outline: 'none', textAlign: 'center', background: 'transparent' }} /><div>following</div></div>
                     </div>
-                    <textarea value={bio} onChange={e => setBio(e.target.value)} rows={2} style={{ width: '100%', fontSize: '14px', border: 'none', borderBottom: '1.5px dashed ' + border, outline: 'none', resize: 'none', background: 'transparent', fontFamily: 'DM Sans' }} />
+                    <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={2} style={{ width: '100%', fontSize: '14px', border: 'none', borderBottom: '1.5px dashed ' + border, outline: 'none', resize: 'none', background: 'transparent', fontFamily: 'DM Sans' }} />
                   </div>
                 </div>
               </div>
@@ -104,19 +148,53 @@ export function GridPlanner() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ background: '#fff', border: '1px solid ' + border, borderRadius: '15px', padding: '17px' }}>
               <h3 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '16px', fontWeight: 400, marginBottom: '5px', color: ink }}>Note to your client</h3>
-              <textarea value={note} onChange={e => setNote(e.target.value)} maxLength={200} rows={4} placeholder="Add a friendly note they'll see at the top..." style={{ width: '100%', fontSize: '13px', border: '1px solid ' + border, borderRadius: '10px', padding: '10px', outline: 'none', resize: 'none', fontFamily: 'DM Sans', color: ink }} />
+              <textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} rows={4} placeholder="Add a friendly note they'll see at the top..." style={{ width: '100%', fontSize: '13px', border: '1px solid ' + border, borderRadius: '10px', padding: '10px', outline: 'none', resize: 'none', fontFamily: 'DM Sans', color: ink }} />
               <div style={{ fontSize: '11px', color: muted, textAlign: 'right', marginTop: '4px' }}>{note.length}/200</div>
             </div>
 
             <div style={{ background: 'linear-gradient(160deg,#fff,#FAF5EC)', border: '1px solid ' + border, borderRadius: '15px', padding: '17px' }}>
               <h3 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '16px', fontWeight: 400, marginBottom: '5px', color: ink }}>Ready to send?</h3>
               <p style={{ fontSize: '12.5px', color: muted, lineHeight: 1.45 }}>Save your grid and get a link your client can view.</p>
-              <button style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '12px', borderRadius: '11px', fontSize: '13.5px', fontWeight: 600, border: 'none', cursor: 'pointer', marginTop: '10px', background: gold, color: '#fff', fontFamily: 'DM Sans' }}>&#128156; Save &amp; send to client</button>
+              <button onClick={() => setShowGate(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '12px', borderRadius: '11px', fontSize: '13.5px', fontWeight: 600, border: 'none', cursor: 'pointer', marginTop: '10px', background: gold, color: '#fff', fontFamily: 'DM Sans' }}>&#128156; Save &amp; send to client</button>
               <button onClick={() => gridRef.current?.click()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '12px', borderRadius: '11px', fontSize: '13.5px', fontWeight: 600, border: '1px solid ' + border, cursor: 'pointer', marginTop: '10px', background: '#fff', color: ink, fontFamily: 'DM Sans' }}>&#11014; Upload grid photos</button>
             </div>
           </div>
         </div>
       </div>
+
+      {showGate && (
+        <div onClick={(e) => { if (e.currentTarget === e.target) setShowGate(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(26,22,18,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', zIndex: 50 }}>
+          <div style={{ background: '#fff', borderRadius: '18px', maxWidth: '430px', width: '100%', padding: '30px', textAlign: 'center' }}>
+            {!savedLink ? (
+              <>
+                <div style={{ fontSize: '34px', marginBottom: '6px' }}>&#128156;</div>
+                <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '25px', fontWeight: 400, lineHeight: 1.15, marginBottom: '8px', color: ink }}>Where should we send your client link?</h2>
+                <p style={{ fontSize: '14px', color: muted, lineHeight: 1.5, marginBottom: '20px' }}>Enter your email to save this grid and get a shareable link.</p>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@youragency.com" style={{ width: '100%', padding: '13px 15px', border: '1px solid ' + border, borderRadius: '11px', fontSize: '14px', fontFamily: 'DM Sans', marginBottom: '12px', outline: 'none' }} />
+                {saveError && <p style={{ fontSize: '12px', color: '#D4614A', marginBottom: '10px' }}>{saveError}</p>}
+                <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: '13px', borderRadius: '11px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', background: gold, color: '#fff', fontFamily: 'DM Sans', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving\u2026' : 'Save my grid & get the link \u2192'}</button>
+                <div style={{ fontSize: '11px', color: muted, marginTop: '14px', lineHeight: 1.4 }}>Free forever for planning. No spam.</div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: '34px', marginBottom: '6px' }}>&#127881;</div>
+                <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '25px', fontWeight: 400, lineHeight: 1.15, marginBottom: '8px', color: ink }}>Your client link is ready.</h2>
+                <p style={{ fontSize: '14px', color: muted, lineHeight: 1.5, marginBottom: '16px' }}>Send this to your client \u2014 they can view the planned feed.</p>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
+                  <input value={savedLink} readOnly style={{ flex: 1, padding: '11px 13px', border: '1px solid ' + border, borderRadius: '10px', fontSize: '12.5px', color: ink, background: '#FAF5EC' }} />
+                  <button onClick={() => { navigator.clipboard.writeText(savedLink); setCopied(true); }} style={{ background: ink, color: '#fff', border: 'none', borderRadius: '10px', padding: '0 16px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' }}>{copied ? 'Copied' : 'Copy'}</button>
+                </div>
+                <div style={{ background: '#FAF5EC', border: '1px solid ' + border, borderRadius: '13px', padding: '16px', marginTop: '18px', textAlign: 'left' }}>
+                  <h4 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '15px', fontWeight: 400, marginBottom: '4px', color: ink }}>Want captions & one-tap approval? &#10024;</h4>
+                  <p style={{ fontSize: '12.5px', color: muted, marginBottom: '0' }}>Generate captions for every post and let clients approve them \u2014 that's Content Charm.</p>
+                  <a href="/signup" style={{ display: 'block', textAlign: 'center', textDecoration: 'none', marginTop: '12px', padding: '11px', borderRadius: '10px', background: gold, color: '#fff', fontSize: '13.5px', fontWeight: 600 }}>Start Content Charm free \u2192</a>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <style>{`@media(max-width:860px){.grid-layout{grid-template-columns:1fr !important}}`}</style>
     </div>
   );
