@@ -12,6 +12,8 @@ import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { TermsOfServicePage } from './pages/TermsOfServicePage';
 import { HelpPage } from './pages/HelpPage';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { GridPlanner } from './pages/GridPlanner';
+import { GridShareView } from './pages/GridShareView';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -100,6 +102,8 @@ function AppContent() {
           </AdminRoute>
         }
       />
+      <Route path="/planner" element={<GridPlanner />} />
+      <Route path="/g/:token" element={<GridShareView />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

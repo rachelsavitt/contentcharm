@@ -164,10 +164,14 @@ export function AdminDashboard() {
       .not('stripe_subscription_id', 'is', null);
 
     if (profiles) {
+      const emailByUserId = users.reduce((acc, u) => {
+        acc[u.id] = u.email;
+        return acc;
+      }, {} as Record<string, string>);
       const subs: Subscription[] = profiles.map(p => ({
         id: p.id,
         user_id: p.user_id,
-        user_email: p.email || '',
+        user_email: emailByUserId[p.user_id] || p.email || '',
         subscription_tier: p.subscription_tier,
         stripe_subscription_id: p.stripe_subscription_id,
         stripe_price_id: p.stripe_price_id || '',
