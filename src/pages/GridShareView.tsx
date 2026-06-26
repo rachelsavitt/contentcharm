@@ -59,7 +59,7 @@ export function GridShareView() {
   const tiles = Array.isArray(grid.tiles) ? grid.tiles : [];
 
   const phone = (
-    <div style={{ width: '390px', maxWidth: '100%', margin: '0 auto', background: '#1a1a1a', borderRadius: '44px', padding: '11px', boxShadow: '0 24px 70px rgba(26,22,18,.28)' }}>
+    <div style={{ width: '390px', maxWidth: '100%', background: '#1a1a1a', borderRadius: '44px', padding: '11px', boxShadow: '0 24px 70px rgba(26,22,18,.28)' }}>
       <div style={{ background: '#fff', borderRadius: '34px', overflow: 'hidden', position: 'relative' }}>
         <div style={{ background: 'linear-gradient(135deg,#FAF5EC,#fff)', borderBottom: '1px solid ' + border, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '12px', color: muted }}>
           From your social media manager ·
@@ -132,7 +132,7 @@ export function GridShareView() {
         <p style={{ fontSize: '13px', color: muted, lineHeight: 1.5 }}>Here's the feed your social media manager planned for you. Take a look below.</p>
       </div>
 
-      <div className="share-layout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '36px', flexWrap: 'wrap', maxWidth: '740px', margin: '0 auto' }}>
+      <div className="share-layout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '36px', flexWrap: 'wrap', maxWidth: '760px', margin: '0 auto' }}>
         {phone}
         {noteCard}
       </div>
