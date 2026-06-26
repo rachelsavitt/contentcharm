@@ -12,6 +12,9 @@ const TILES = [
   { type: 'Carousel', bg: 'linear-gradient(150deg,#E2BE9A,#C99B73)' },
   { type: 'Post', bg: 'linear-gradient(150deg,#EFE7DA,#DCC9AE)' },
   { type: 'Reel', bg: 'linear-gradient(150deg,#E9D2BC,#D2AE89)' },
+  { type: 'Quote', quote: '"Glow is a habit."', solid: '#C9A96E', color: '#fff' },
+  { type: 'Carousel', bg: 'linear-gradient(150deg,#EFE7DA,#D9C5A8)' },
+  { type: 'Post', bg: 'linear-gradient(150deg,#E8CBB4,#CDA17E)' },
 ];
 
 export function GridPlanner() {
@@ -22,7 +25,7 @@ export function GridPlanner() {
   const [following, setFollowing] = useState('312');
   const [avatar, setAvatar] = useState<string | null>(null);
   const [note, setNote] = useState('Hi! Here\u2019s your content plan for the month \u2014 take a look and let me know what you love \ud83e\udd0e');
-  const [images, setImages] = useState<(string | null)[]>(Array(9).fill(null));
+  const [images, setImages] = useState<(string | null)[]>(Array(12).fill(null));
   const avaRef = useRef<HTMLInputElement>(null);
   const gridRef = useRef<HTMLInputElement>(null);
 
