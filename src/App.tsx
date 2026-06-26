@@ -102,7 +102,7 @@ function AppContent() {
           </AdminRoute>
         }
       />
-      <Route path="/planner" element={<GridPlanner />} />
+      <Route path="/instagram-grid" element={<GridPlanner />} />
       <Route path="/g/:token" element={<GridShareView />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
