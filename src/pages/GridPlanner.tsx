@@ -172,22 +172,22 @@ export function GridPlanner() {
                 <p style={{ fontSize: '14px', color: muted, lineHeight: 1.5, marginBottom: '20px' }}>Enter your email to save this grid and get a shareable link.</p>
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@youragency.com" style={{ width: '100%', padding: '13px 15px', border: '1px solid ' + border, borderRadius: '11px', fontSize: '14px', fontFamily: 'DM Sans', marginBottom: '12px', outline: 'none' }} />
                 {saveError && <p style={{ fontSize: '12px', color: '#D4614A', marginBottom: '10px' }}>{saveError}</p>}
-                <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: '13px', borderRadius: '11px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', background: gold, color: '#fff', fontFamily: 'DM Sans', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving\u2026' : 'Save my grid & get the link \u2192'}</button>
+                <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: '13px', borderRadius: '11px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', background: gold, color: '#fff', fontFamily: 'DM Sans', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save my grid & get the link →'}</button>
                 <div style={{ fontSize: '11px', color: muted, marginTop: '14px', lineHeight: 1.4 }}>Free forever for planning. No spam.</div>
               </>
             ) : (
               <>
                 <div style={{ fontSize: '34px', marginBottom: '6px' }}>&#127881;</div>
                 <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '25px', fontWeight: 400, lineHeight: 1.15, marginBottom: '8px', color: ink }}>Your client link is ready.</h2>
-                <p style={{ fontSize: '14px', color: muted, lineHeight: 1.5, marginBottom: '16px' }}>Send this to your client \u2014 they can view the planned feed.</p>
+                <p style={{ fontSize: '14px', color: muted, lineHeight: 1.5, marginBottom: '16px' }}>Send this to your client — they can view the planned feed.</p>
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
                   <input value={savedLink} readOnly style={{ flex: 1, padding: '11px 13px', border: '1px solid ' + border, borderRadius: '10px', fontSize: '12.5px', color: ink, background: '#FAF5EC' }} />
                   <button onClick={() => { navigator.clipboard.writeText(savedLink); setCopied(true); }} style={{ background: ink, color: '#fff', border: 'none', borderRadius: '10px', padding: '0 16px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' }}>{copied ? 'Copied' : 'Copy'}</button>
                 </div>
                 <div style={{ background: '#FAF5EC', border: '1px solid ' + border, borderRadius: '13px', padding: '16px', marginTop: '18px', textAlign: 'left' }}>
                   <h4 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '15px', fontWeight: 400, marginBottom: '4px', color: ink }}>Want captions & one-tap approval? &#10024;</h4>
-                  <p style={{ fontSize: '12.5px', color: muted, marginBottom: '0' }}>Generate captions for every post and let clients approve them \u2014 that's Content Charm.</p>
-                  <a href="/signup" style={{ display: 'block', textAlign: 'center', textDecoration: 'none', marginTop: '12px', padding: '11px', borderRadius: '10px', background: gold, color: '#fff', fontSize: '13.5px', fontWeight: 600 }}>Start Content Charm free \u2192</a>
+                  <p style={{ fontSize: '12.5px', color: muted, marginBottom: '0' }}>Generate captions for every post and let clients approve them — that's Content Charm.</p>
+                  <a href="/signup" style={{ display: 'block', textAlign: 'center', textDecoration: 'none', marginTop: '12px', padding: '11px', borderRadius: '10px', background: gold, color: '#fff', fontSize: '13.5px', fontWeight: 600 }}>Start Content Charm free →</a>
                 </div>
               </>
             )}
