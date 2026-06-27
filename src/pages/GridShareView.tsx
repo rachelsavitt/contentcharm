@@ -126,7 +126,7 @@ export function GridShareView() {
   ) : null;
 
   return (
-    <div style={{ minHeight: '100vh', background: cream, padding: '36px 16px 50px', fontFamily: 'DM Sans, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: cream, padding: '80px 16px 60px', fontFamily: 'DM Sans, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div className="share-layout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '36px', flexWrap: 'wrap', maxWidth: '760px', margin: '0 auto' }}>
         {phone}
         {noteCard}
