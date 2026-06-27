@@ -127,11 +127,6 @@ export function GridShareView() {
 
   return (
     <div style={{ minHeight: '100vh', background: cream, padding: '36px 16px 50px', fontFamily: 'DM Sans, sans-serif' }}>
-      <div style={{ maxWidth: '420px', margin: '0 auto 26px', textAlign: 'center' }}>
-        <div style={{ fontSize: '11px', letterSpacing: '.16em', textTransform: 'uppercase', color: gold, fontWeight: 600, marginBottom: '6px' }}>Your content plan</div>
-        <p style={{ fontSize: '13px', color: muted, lineHeight: 1.5 }}>Here's the feed your social media manager planned for you. Take a look below.</p>
-      </div>
-
       <div className="share-layout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '36px', flexWrap: 'wrap', maxWidth: '760px', margin: '0 auto' }}>
         {phone}
         {noteCard}
