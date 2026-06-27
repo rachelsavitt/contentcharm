@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
-interface Tile { type: string; bg?: string; solid?: string; quote?: string; color?: string; }
+interface Tile { type: string; bg?: string; solid?: string; quote?: string; color?: string; img?: string; }
 interface Grid {
   client_handle: string;
   client_bio: string;
@@ -10,6 +10,7 @@ interface Grid {
   stat_followers: string;
   stat_following: string;
   note_to_client: string;
+  client_avatar_url?: string | null;
   tiles: Tile[];
 }
 
@@ -69,7 +70,7 @@ export function GridShareView() {
 
         <div style={{ padding: '16px 16px 12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'linear-gradient(135deg,#E8C9A0,#C9A96E)', border: '1px solid ' + border, flex: 'none' }} />
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: grid.client_avatar_url ? `url(${grid.client_avatar_url}) center/cover` : 'linear-gradient(135deg,#E8C9A0,#C9A96E)', border: '1px solid ' + border, flex: 'none' }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '16px', fontWeight: 400, marginBottom: '8px', color: '#262626' }}>{grid.client_handle}</div>
               <div style={{ display: 'flex', gap: '18px', fontSize: '13px', color: '#262626' }}>
@@ -90,8 +91,8 @@ export function GridShareView() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '2px', padding: '2px' }}>
           {tiles.map((t, i) => (
-            <div key={i} style={{ position: 'relative', aspectRatio: '1', overflow: 'hidden', background: t.solid || t.bg || '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '8px' }}>
-              {t.quote && <span style={{ fontFamily: 'DM Serif Display, serif', fontSize: '11px', lineHeight: 1.2, color: t.color }}>{t.quote}</span>}
+            <div key={i} style={{ position: 'relative', aspectRatio: '1', overflow: 'hidden', background: t.img ? `url(${t.img}) center/cover` : (t.solid || t.bg || '#eee'), display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '8px' }}>
+              {!t.img && t.quote && <span style={{ fontFamily: 'DM Serif Display, serif', fontSize: '11px', lineHeight: 1.2, color: t.color }}>{t.quote}</span>}
               <span style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,.55)', color: '#fff', fontSize: '8px', padding: '1px 5px', borderRadius: '10px' }}>{t.type}</span>
             </div>
           ))}

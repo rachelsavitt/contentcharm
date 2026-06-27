@@ -27,6 +27,8 @@ export function GridPlanner() {
   const [avatar, setAvatar] = useState<string | null>(null);
   const [note, setNote] = useState('Hi! Here\u2019s your content plan for the month \u2014 take a look and let me know what you love \ud83e\udd0e');
   const [images, setImages] = useState<(string | null)[]>(Array(12).fill(null));
+  const imageFiles = useRef<(File | null)[]>(Array(12).fill(null));
+  const avatarFile = useRef<File | null>(null);
   const avaRef = useRef<HTMLInputElement>(null);
   const gridRef = useRef<HTMLInputElement>(null);
   const activeTile = useRef<number | null>(null);
@@ -41,7 +43,7 @@ export function GridPlanner() {
 
   const onAva = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    if (f) setAvatar(URL.createObjectURL(f));
+    if (f) { avatarFile.current = f; setAvatar(URL.createObjectURL(f)); }
   };
   const onGrid = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -52,12 +54,14 @@ export function GridPlanner() {
       if (target !== null) {
         // A specific tile was clicked: set just that tile to the first file
         next[target] = URL.createObjectURL(files[0]);
+        imageFiles.current[target] = files[0];
       } else {
         // Bulk upload: fill EMPTY tiles in order (don't overwrite existing)
         let fi = 0;
         for (let i = 0; i < next.length && fi < files.length; i++) {
           if (next[i] === null) {
             next[i] = URL.createObjectURL(files[fi]);
+            imageFiles.current[i] = files[fi];
             fi++;
           }
         }
@@ -75,6 +79,7 @@ export function GridPlanner() {
 
   const removeImage = (i: number, e: React.MouseEvent) => {
     e.stopPropagation();
+    imageFiles.current[i] = null;
     setImages((prev) => {
       const next = [...prev];
       next[i] = null;
@@ -92,16 +97,45 @@ export function GridPlanner() {
     try {
       const token = Math.random().toString(36).slice(2, 10);
       await supabase.from('grid_leads').insert({ email: email.trim(), source: 'grid_planner' });
+
+      // Upload any tile images to storage, merge their public URLs into the tiles
+      const tilesToSave = TILES.map((t) => ({ ...t })) as any[];
+      for (let i = 0; i < imageFiles.current.length; i++) {
+        const file = imageFiles.current[i];
+        if (file) {
+          const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+          const path = `${token}/tile-${i}.${ext}`;
+          const { error: upErr } = await supabase.storage.from('grid-images').upload(path, file, { upsert: true });
+          if (!upErr) {
+            const { data: pub } = supabase.storage.from('grid-images').getPublicUrl(path);
+            if (pub?.publicUrl && tilesToSave[i]) tilesToSave[i].img = pub.publicUrl;
+          }
+        }
+      }
+
+      // Upload avatar if set
+      let avatarUrl: string | null = null;
+      if (avatarFile.current) {
+        const aExt = (avatarFile.current.name.split('.').pop() || 'jpg').toLowerCase();
+        const aPath = `${token}/avatar.${aExt}`;
+        const { error: aErr } = await supabase.storage.from('grid-images').upload(aPath, avatarFile.current, { upsert: true });
+        if (!aErr) {
+          const { data: aPub } = supabase.storage.from('grid-images').getPublicUrl(aPath);
+          if (aPub?.publicUrl) avatarUrl = aPub.publicUrl;
+        }
+      }
+
       const { error } = await supabase.from('grids').insert({
         share_token: token,
         email: email.trim(),
         client_handle: handle,
         client_bio: bio,
+        client_avatar_url: avatarUrl,
         stat_posts: posts,
         stat_followers: followers,
         stat_following: following,
         note_to_client: note,
-        tiles: TILES,
+        tiles: tilesToSave,
       });
       if (error) throw error;
       setSavedLink(`${window.location.origin}/g/${token}`);
