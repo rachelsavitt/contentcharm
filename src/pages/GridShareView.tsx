@@ -59,7 +59,7 @@ export function GridShareView() {
   const tiles = Array.isArray(grid.tiles) ? grid.tiles : [];
 
   const phone = (
-    <div style={{ width: '390px', maxWidth: '100%', background: '#1a1a1a', borderRadius: '44px', padding: '11px', boxShadow: '0 24px 70px rgba(26,22,18,.28)' }}>
+    <div style={{ width: '390px', maxWidth: '100%', flex: 'none', background: '#1a1a1a', borderRadius: '44px', padding: '11px', boxShadow: '0 24px 70px rgba(26,22,18,.28)' }}>
       <div style={{ background: '#fff', borderRadius: '34px', overflow: 'hidden', position: 'relative' }}>
         <div style={{ background: 'linear-gradient(135deg,#FAF5EC,#fff)', borderBottom: '1px solid ' + border, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '12px', color: muted }}>
           From your social media manager ·
@@ -119,7 +119,7 @@ export function GridShareView() {
   );
 
   const noteCard = grid.note_to_client ? (
-    <div style={{ position: 'relative', background: 'linear-gradient(170deg,#FFFDF7,#FBF4E4)', borderRadius: '6px', padding: '32px 26px 26px', maxWidth: '300px', width: '100%', boxShadow: '0 8px 26px rgba(26,22,18,.13)', transform: 'rotate(-1.5deg)', border: '1px solid #F0E7D4' }}>
+    <div style={{ position: 'relative', background: 'linear-gradient(170deg,#FFFDF7,#FBF4E4)', borderRadius: '6px', padding: '32px 26px 26px', width: '270px', flex: 'none', boxShadow: '0 8px 26px rgba(26,22,18,.13)', transform: 'rotate(-1.5deg)', border: '1px solid #F0E7D4' }}>
       <div style={{ position: 'absolute', top: '-11px', left: '50%', transform: 'translateX(-50%) rotate(2deg)', width: '80px', height: '24px', background: 'rgba(201,169,110,.25)', border: '1px solid rgba(201,169,110,.35)', borderRadius: '2px' }} />
       <p style={{ fontFamily: 'Caveat, cursive', fontSize: '24px', lineHeight: 1.35, color: '#3a342c' }}>{grid.note_to_client}</p>
     </div>
