@@ -29,6 +29,7 @@ export function GridPlanner() {
   const [images, setImages] = useState<(string | null)[]>(Array(12).fill(null));
   const avaRef = useRef<HTMLInputElement>(null);
   const gridRef = useRef<HTMLInputElement>(null);
+  const activeTile = useRef<number | null>(null);
 
   // Stage 4: save + email gate
   const [showGate, setShowGate] = useState(false);
@@ -44,13 +45,39 @@ export function GridPlanner() {
   };
   const onGrid = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
     setImages((prev) => {
       const next = [...prev];
-      let fi = 0;
-      for (let i = 0; i < next.length && fi < files.length; i++) {
-        next[i] = URL.createObjectURL(files[fi]);
-        fi++;
+      const target = activeTile.current;
+      if (target !== null) {
+        // A specific tile was clicked: set just that tile to the first file
+        next[target] = URL.createObjectURL(files[0]);
+      } else {
+        // Bulk upload: fill EMPTY tiles in order (don't overwrite existing)
+        let fi = 0;
+        for (let i = 0; i < next.length && fi < files.length; i++) {
+          if (next[i] === null) {
+            next[i] = URL.createObjectURL(files[fi]);
+            fi++;
+          }
+        }
       }
+      return next;
+    });
+    activeTile.current = null;
+    e.target.value = '';
+  };
+
+  const openTilePicker = (i: number) => {
+    activeTile.current = i;
+    gridRef.current?.click();
+  };
+
+  const removeImage = (i: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setImages((prev) => {
+      const next = [...prev];
+      next[i] = null;
       return next;
     });
   };
@@ -135,8 +162,10 @@ export function GridPlanner() {
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '3px', padding: '3px' }}>
                 {TILES.map((t, i) => (
-                  <div key={i} onClick={() => gridRef.current?.click()} style={{ position: 'relative', aspectRatio: '1', overflow: 'hidden', cursor: 'pointer', background: images[i] ? `url(${images[i]}) center/cover` : (t.solid || t.bg), display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '10px' }}>
+                  <div key={i} onClick={() => openTilePicker(i)} style={{ position: 'relative', aspectRatio: '1', overflow: 'hidden', cursor: 'pointer', background: images[i] ? `url(${images[i]}) center/cover` : (t.solid || t.bg), display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '10px' }}>
                     {!images[i] && t.quote && <span style={{ fontFamily: 'DM Serif Display, serif', fontSize: '12px', lineHeight: 1.25, color: t.color }}>{t.quote}</span>}
+                    {!images[i] && <span style={{ position: 'absolute', bottom: '5px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(255,255,255,.85)', color: '#262626', fontSize: '8px', fontWeight: 600, padding: '2px 6px', borderRadius: '8px', whiteSpace: 'nowrap' }}>+ photo</span>}
+                    {images[i] && <button onClick={(e) => removeImage(i, e)} style={{ position: 'absolute', top: '4px', left: '4px', background: 'rgba(0,0,0,.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '18px', height: '18px', fontSize: '11px', lineHeight: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>×</button>}
                     <span style={{ position: 'absolute', top: '5px', right: '5px', background: 'rgba(0,0,0,.55)', color: '#fff', fontSize: '9px', padding: '1px 5px', borderRadius: '10px' }}>{t.type}</span>
                   </div>
                 ))}
@@ -156,7 +185,7 @@ export function GridPlanner() {
               <h3 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '16px', fontWeight: 400, marginBottom: '5px', color: ink }}>Ready to send?</h3>
               <p style={{ fontSize: '12.5px', color: muted, lineHeight: 1.45 }}>Save your grid and get a link your client can view.</p>
               <button onClick={() => setShowGate(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '12px', borderRadius: '11px', fontSize: '13.5px', fontWeight: 600, border: 'none', cursor: 'pointer', marginTop: '10px', background: gold, color: '#fff', fontFamily: 'DM Sans' }}>&#128156; Save &amp; send to client</button>
-              <button onClick={() => gridRef.current?.click()} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '12px', borderRadius: '11px', fontSize: '13.5px', fontWeight: 600, border: '1px solid ' + border, cursor: 'pointer', marginTop: '10px', background: '#fff', color: ink, fontFamily: 'DM Sans' }}>&#11014; Upload grid photos</button>
+              <button onClick={() => { activeTile.current = null; gridRef.current?.click(); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '12px', borderRadius: '11px', fontSize: '13.5px', fontWeight: 600, border: '1px solid ' + border, cursor: 'pointer', marginTop: '10px', background: '#fff', color: ink, fontFamily: 'DM Sans' }}>&#11014; Upload grid photos</button>
             </div>
           </div>
         </div>
@@ -172,22 +201,22 @@ export function GridPlanner() {
                 <p style={{ fontSize: '14px', color: muted, lineHeight: 1.5, marginBottom: '20px' }}>Enter your email to save this grid and get a shareable link.</p>
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@youragency.com" style={{ width: '100%', padding: '13px 15px', border: '1px solid ' + border, borderRadius: '11px', fontSize: '14px', fontFamily: 'DM Sans', marginBottom: '12px', outline: 'none' }} />
                 {saveError && <p style={{ fontSize: '12px', color: '#D4614A', marginBottom: '10px' }}>{saveError}</p>}
-                <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: '13px', borderRadius: '11px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', background: gold, color: '#fff', fontFamily: 'DM Sans', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving\u2026' : 'Save my grid & get the link \u2192'}</button>
+                <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: '13px', borderRadius: '11px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', background: gold, color: '#fff', fontFamily: 'DM Sans', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save my grid & get the link →'}</button>
                 <div style={{ fontSize: '11px', color: muted, marginTop: '14px', lineHeight: 1.4 }}>Free forever for planning. No spam.</div>
               </>
             ) : (
               <>
                 <div style={{ fontSize: '34px', marginBottom: '6px' }}>&#127881;</div>
                 <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '25px', fontWeight: 400, lineHeight: 1.15, marginBottom: '8px', color: ink }}>Your client link is ready.</h2>
-                <p style={{ fontSize: '14px', color: muted, lineHeight: 1.5, marginBottom: '16px' }}>Send this to your client \u2014 they can view the planned feed.</p>
+                <p style={{ fontSize: '14px', color: muted, lineHeight: 1.5, marginBottom: '16px' }}>Send this to your client — they can view the planned feed.</p>
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
                   <input value={savedLink} readOnly style={{ flex: 1, padding: '11px 13px', border: '1px solid ' + border, borderRadius: '10px', fontSize: '12.5px', color: ink, background: '#FAF5EC' }} />
                   <button onClick={() => { navigator.clipboard.writeText(savedLink); setCopied(true); }} style={{ background: ink, color: '#fff', border: 'none', borderRadius: '10px', padding: '0 16px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' }}>{copied ? 'Copied' : 'Copy'}</button>
                 </div>
                 <div style={{ background: '#FAF5EC', border: '1px solid ' + border, borderRadius: '13px', padding: '16px', marginTop: '18px', textAlign: 'left' }}>
                   <h4 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '15px', fontWeight: 400, marginBottom: '4px', color: ink }}>Want captions & one-tap approval? &#10024;</h4>
-                  <p style={{ fontSize: '12.5px', color: muted, marginBottom: '0' }}>Generate captions for every post and let clients approve them \u2014 that's Content Charm.</p>
-                  <a href="/signup" style={{ display: 'block', textAlign: 'center', textDecoration: 'none', marginTop: '12px', padding: '11px', borderRadius: '10px', background: gold, color: '#fff', fontSize: '13.5px', fontWeight: 600 }}>Start Content Charm free \u2192</a>
+                  <p style={{ fontSize: '12.5px', color: muted, marginBottom: '0' }}>Generate captions for every post and let clients approve them — that's Content Charm.</p>
+                  <a href="/signup" style={{ display: 'block', textAlign: 'center', textDecoration: 'none', marginTop: '12px', padding: '11px', borderRadius: '10px', background: gold, color: '#fff', fontSize: '13.5px', fontWeight: 600 }}>Start Content Charm free →</a>
                 </div>
               </>
             )}
