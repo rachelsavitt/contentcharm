@@ -2,6 +2,9 @@ import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const TILES = [
   { type: 'Reel', bg: 'linear-gradient(150deg,#F0D9C2,#E3B98F)' },
@@ -27,6 +30,7 @@ export function GridPlanner() {
   const [avatar, setAvatar] = useState<string | null>(null);
   const [note, setNote] = useState('Hi! Here\u2019s your content plan for the month \u2014 take a look and let me know what you love \ud83e\udd0e');
   const [images, setImages] = useState<(string | null)[]>(Array(12).fill(null));
+  const [order, setOrder] = useState<number[]>(Array.from({ length: 12 }, (_, i) => i));
   const imageFiles = useRef<(File | null)[]>(Array(12).fill(null));
   const avatarFile = useRef<File | null>(null);
   const avaRef = useRef<HTMLInputElement>(null);
@@ -98,19 +102,22 @@ export function GridPlanner() {
       const token = Math.random().toString(36).slice(2, 10);
       await supabase.from('grid_leads').insert({ email: email.trim(), source: 'grid_planner' });
 
-      // Upload any tile images to storage, merge their public URLs into the tiles
-      const tilesToSave = TILES.map((t) => ({ ...t })) as any[];
-      for (let i = 0; i < imageFiles.current.length; i++) {
-        const file = imageFiles.current[i];
+      // Build tiles in the user's dragged order, uploading each tile's image
+      const tilesToSave: any[] = [];
+      for (let pos = 0; pos < order.length; pos++) {
+        const srcIdx = order[pos];
+        const tile = { ...TILES[srcIdx] } as any;
+        const file = imageFiles.current[srcIdx];
         if (file) {
           const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-          const path = `${token}/tile-${i}.${ext}`;
+          const path = `${token}/tile-${pos}.${ext}`;
           const { error: upErr } = await supabase.storage.from('grid-images').upload(path, file, { upsert: true });
           if (!upErr) {
             const { data: pub } = supabase.storage.from('grid-images').getPublicUrl(path);
-            if (pub?.publicUrl && tilesToSave[i]) tilesToSave[i].img = pub.publicUrl;
+            if (pub?.publicUrl) tile.img = pub.publicUrl;
           }
         }
+        tilesToSave.push(tile);
       }
 
       // Upload avatar if set
@@ -147,6 +154,53 @@ export function GridPlanner() {
   };
 
   const cream = '#FAF8F4', gold = '#C9A96E', ink = '#1A1612', border = '#E8E3DC', muted = '#8C8479';
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 6 } })
+  );
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (over && active.id !== over.id) {
+      setOrder((prev) => {
+        const oldPos = prev.indexOf(Number(active.id));
+        const newPos = prev.indexOf(Number(over.id));
+        return arrayMove(prev, oldPos, newPos);
+      });
+    }
+  };
+
+  function SortableTile({ id }: { id: number }) {
+    const t = TILES[id];
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+    const style: React.CSSProperties = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      position: 'relative',
+      aspectRatio: '1',
+      overflow: 'hidden',
+      cursor: 'grab',
+      background: images[id] ? `url(${images[id]}) center/cover` : (t.solid || t.bg),
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      textAlign: 'center',
+      padding: '10px',
+      zIndex: isDragging ? 10 : 1,
+      opacity: isDragging ? 0.85 : 1,
+      boxShadow: isDragging ? '0 10px 24px rgba(26,22,18,.3)' : 'none',
+      touchAction: 'none',
+    };
+    return (
+      <div ref={setNodeRef} style={style} {...attributes} {...listeners} onClick={() => openTilePicker(id)}>
+        {!images[id] && t.quote && <span style={{ fontFamily: 'DM Serif Display, serif', fontSize: '12px', lineHeight: 1.25, color: t.color }}>{t.quote}</span>}
+        {!images[id] && <span style={{ position: 'absolute', bottom: '5px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(255,255,255,.85)', color: '#262626', fontSize: '8px', fontWeight: 600, padding: '2px 6px', borderRadius: '8px', whiteSpace: 'nowrap' }}>+ photo</span>}
+        {images[id] && <button onClick={(e) => removeImage(id, e)} onPointerDown={(e) => e.stopPropagation()} style={{ position: 'absolute', top: '4px', left: '4px', background: 'rgba(0,0,0,.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '18px', height: '18px', fontSize: '11px', lineHeight: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, zIndex: 3 }}>×</button>}
+        <span style={{ position: 'absolute', top: '5px', right: '5px', background: 'rgba(0,0,0,.55)', color: '#fff', fontSize: '9px', padding: '1px 5px', borderRadius: '10px' }}>{t.type}</span>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: cream, padding: '28px 18px 70px', fontFamily: 'DM Sans, sans-serif' }}>
@@ -194,16 +248,15 @@ export function GridPlanner() {
                 <div style={{ flex: 1, textAlign: 'center', padding: '12px', fontSize: '11px', letterSpacing: '.08em', fontWeight: 600, color: '#8e8e8e' }}>&#9825; TAGGED</div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '3px', padding: '3px' }}>
-                {TILES.map((t, i) => (
-                  <div key={i} onClick={() => openTilePicker(i)} style={{ position: 'relative', aspectRatio: '1', overflow: 'hidden', cursor: 'pointer', background: images[i] ? `url(${images[i]}) center/cover` : (t.solid || t.bg), display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '10px' }}>
-                    {!images[i] && t.quote && <span style={{ fontFamily: 'DM Serif Display, serif', fontSize: '12px', lineHeight: 1.25, color: t.color }}>{t.quote}</span>}
-                    {!images[i] && <span style={{ position: 'absolute', bottom: '5px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(255,255,255,.85)', color: '#262626', fontSize: '8px', fontWeight: 600, padding: '2px 6px', borderRadius: '8px', whiteSpace: 'nowrap' }}>+ photo</span>}
-                    {images[i] && <button onClick={(e) => removeImage(i, e)} style={{ position: 'absolute', top: '4px', left: '4px', background: 'rgba(0,0,0,.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '18px', height: '18px', fontSize: '11px', lineHeight: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>×</button>}
-                    <span style={{ position: 'absolute', top: '5px', right: '5px', background: 'rgba(0,0,0,.55)', color: '#fff', fontSize: '9px', padding: '1px 5px', borderRadius: '10px' }}>{t.type}</span>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={order} strategy={rectSortingStrategy}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '3px', padding: '3px' }}>
+                    {order.map((id) => (
+                      <SortableTile key={id} id={id} />
+                    ))}
                   </div>
-                ))}
-              </div>
+                </SortableContext>
+              </DndContext>
             </div>
             <input ref={gridRef} type="file" accept="image/*" multiple onChange={onGrid} style={{ display: 'none' }} />
           </div>
